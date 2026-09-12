@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160" width="160" height="160">
+  <defs>
+    <linearGradient id="emeraldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#34d399" />
+      <stop offset="100%" stop-color="#059669" />
+    </linearGradient>
+  </defs>
+  <!-- Scalloped seal edge -->
+  <circle cx="80" cy="80" r="74" fill="#064e3b" fill-opacity="0.3" stroke="url(#emeraldGrad)" stroke-width="3" stroke-dasharray="6,3" />
+  <circle cx="80" cy="80" r="66" fill="#042f2e" stroke="url(#emeraldGrad)" stroke-width="2" />
+  <!-- Checkmark shield -->
+  <path d="M80 35 L110 50 V85 C110 105 80 125 80 125 C80 125 50 105 50 85 V50 Z" fill="#0f172a" stroke="#10b981" stroke-width="3" />
+  <path d="M68 82 L76 90 L94 72" fill="none" stroke="#34d399" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
+</svg>
