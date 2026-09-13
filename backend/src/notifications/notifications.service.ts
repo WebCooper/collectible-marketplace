@@ -58,9 +58,21 @@ export class NotificationsService {
       },
     });
 
-    for (const channel of channels) {
-      if (channel === NotificationChannel.IN_APP) continue;
-      void this.deliver({ notification: outbound, channel, attempts: 0 });
+    const externalChannels = channels.filter(
+      (channel) => channel !== NotificationChannel.IN_APP,
+    );
+
+    if (externalChannels.length) {
+      // Callers that already hold the recipient's contact details pass them in;
+      // for the rest we resolve them once here so transports never have to.
+      const contact =
+        outbound.email || outbound.phone
+          ? outbound
+          : { ...outbound, ...(await this.resolveContact(outbound.userId)) };
+
+      for (const channel of externalChannels) {
+        void this.deliver({ notification: contact, channel, attempts: 0 });
+      }
     }
 
     return record;
@@ -72,6 +84,14 @@ export class NotificationsService {
     channels: NotificationChannel[] = [NotificationChannel.IN_APP],
   ) {
     await Promise.all(outbounds.map((o) => this.notify(o, channels)));
+  }
+
+  private async resolveContact(userId: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { email: true, phone: true },
+    });
+    return { email: user?.email, phone: user?.phone ?? undefined };
   }
 
   private async deliver(job: QueuedDelivery): Promise<void> {

@@ -10,6 +10,7 @@ import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { ListingsModule } from './listings/listings.module';
 import { CertificatesModule } from './certificates/certificates.module';
+import { AuctionsModule } from './auctions/auctions.module';
 import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
 import { RolesGuard } from './auth/guards/roles.guard';
 
@@ -31,6 +32,7 @@ import { RolesGuard } from './auth/guards/roles.guard';
     UsersModule,
     ListingsModule,
     CertificatesModule,
+    AuctionsModule,
   ],
   providers: [
     // Order matters: authenticate, then check the role, then rate-limit.
