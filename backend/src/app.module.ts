@@ -12,6 +12,7 @@ import { ListingsModule } from './listings/listings.module';
 import { CertificatesModule } from './certificates/certificates.module';
 import { AuctionsModule } from './auctions/auctions.module';
 import { OrdersModule } from './orders/orders.module';
+import { AdminModule } from './admin/admin.module';
 import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
 import { RolesGuard } from './auth/guards/roles.guard';
 
@@ -35,6 +36,7 @@ import { RolesGuard } from './auth/guards/roles.guard';
     CertificatesModule,
     AuctionsModule,
     OrdersModule,
+    AdminModule,
   ],
   providers: [
     // Order matters: authenticate, then check the role, then rate-limit.
