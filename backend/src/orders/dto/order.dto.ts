@@ -20,7 +20,8 @@ export class CheckoutDto {
   auctionId?: string;
 
   @ApiPropertyOptional({
-    description: 'Fixed-price listing being bought. Omit when checking out an auction win.',
+    description:
+      'Fixed-price listing being bought. Omit when checking out an auction win.',
   })
   @IsOptional()
   @IsUUID()

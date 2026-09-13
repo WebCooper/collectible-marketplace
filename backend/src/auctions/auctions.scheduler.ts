@@ -108,7 +108,10 @@ export class AuctionsScheduler {
             data: { status: BidStatus.WON },
           });
           await tx.bid.updateMany({
-            where: { auctionId, status: { in: [BidStatus.ACTIVE, BidStatus.OUTBID] } },
+            where: {
+              auctionId,
+              status: { in: [BidStatus.ACTIVE, BidStatus.OUTBID] },
+            },
             data: { status: BidStatus.LOST },
           });
         }
@@ -215,7 +218,9 @@ export class AuctionsScheduler {
     }
 
     if (closing.length) {
-      this.logger.log(`Sent closing-soon alerts for ${closing.length} auction(s)`);
+      this.logger.log(
+        `Sent closing-soon alerts for ${closing.length} auction(s)`,
+      );
     }
   }
 }

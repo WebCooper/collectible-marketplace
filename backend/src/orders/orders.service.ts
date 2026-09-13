@@ -124,7 +124,9 @@ export class OrdersService {
   ) {
     const auction = await tx.auction.findUnique({
       where: { id: auctionId },
-      include: { listing: { select: { id: true, title: true, sellerId: true } } },
+      include: {
+        listing: { select: { id: true, title: true, sellerId: true } },
+      },
     });
 
     if (!auction) throw new NotFoundException('Auction not found');
@@ -287,12 +289,18 @@ export class OrdersService {
       ]);
     }
 
-    return { status: succeeded ? PaymentStatus.SUCCEEDED : PaymentStatus.FAILED };
+    return {
+      status: succeeded ? PaymentStatus.SUCCEEDED : PaymentStatus.FAILED,
+    };
   }
 
   // --- Order tracking -----------------------------------------------------
 
-  async findMine(user: AuthenticatedUser, query: ListOrdersDto, asSeller = false) {
+  async findMine(
+    user: AuthenticatedUser,
+    query: ListOrdersDto,
+    asSeller = false,
+  ) {
     const where: Prisma.OrderWhereInput = {
       ...(asSeller ? { sellerId: user.id } : { buyerId: user.id }),
       ...(query.status ? { status: query.status } : {}),
@@ -309,10 +317,16 @@ export class OrdersService {
             select: {
               id: true,
               title: true,
-              images: { take: 1, orderBy: { position: 'asc' }, select: { url: true } },
+              images: {
+                take: 1,
+                orderBy: { position: 'asc' },
+                select: { url: true },
+              },
             },
           },
-          payment: { select: { status: true, provider: true, transactionRef: true } },
+          payment: {
+            select: { status: true, provider: true, transactionRef: true },
+          },
           buyer: { select: { id: true, name: true } },
           seller: { select: { id: true, name: true } },
           dispute: { select: { id: true, status: true } },
@@ -413,11 +427,17 @@ export class OrdersService {
 
   /// Either party may raise a dispute on an in-progress or completed order
   /// for administrator review (FR 2.1.7).
-  async raiseDispute(user: AuthenticatedUser, orderId: string, dto: RaiseDisputeDto) {
+  async raiseDispute(
+    user: AuthenticatedUser,
+    orderId: string,
+    dto: RaiseDisputeDto,
+  ) {
     const order = await this.findOne(user, orderId);
 
     if (order.buyerId !== user.id && order.sellerId !== user.id) {
-      throw new ForbiddenException('Only the buyer or seller can raise a dispute');
+      throw new ForbiddenException(
+        'Only the buyer or seller can raise a dispute',
+      );
     }
     if (order.status === OrderStatus.CANCELLED) {
       throw new BadRequestException('This order was cancelled');

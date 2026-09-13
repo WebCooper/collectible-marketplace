@@ -1,98 +1,196 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# Backend — Sri Lankan Collectible Marketplace
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+NestJS API backing the marketplace: REST endpoints plus a WebSocket channel for
+live bidding, on a single PostgreSQL database accessed through Prisma.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+Owned by **Member 3**. This README is the contract the other members build
+against.
 
-## Description
-
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
-
-## Project setup
+## Running it locally
 
 ```bash
-$ npm install
+npm install
+cp .env.example .env          # then set DATABASE_URL
+npx prisma migrate deploy     # or `npm run prisma:migrate` while developing
+npm run prisma:seed           # sample users, listings and a live auction
+npm run start:dev
 ```
 
-## Compile and run the project
+The API listens on **3001** (the Next.js client owns 3000, the Vite admin panel
+5173). Interactive API docs are at <http://localhost:3001/api>.
+
+Seeded accounts all use the password `Password123!`:
+
+| Role | E-mail |
+| --- | --- |
+| Administrator | `admin@marketplace.lk` |
+| Appraiser | `appraiser@marketplace.lk` |
+| Seller | `seller@marketplace.lk` |
+| Buyer | `buyer@marketplace.lk`, `buyer2@marketplace.lk` |
+
+## How authentication works
+
+Every route requires a valid JWT unless it is marked `@Public()`. Send it either
+as `Authorization: Bearer <token>` or in an `access_token` cookie — the strategy
+accepts both, so the admin panel can use a header and the client an httpOnly
+cookie.
+
+`POST /auth/login` returns `{ accessToken, refreshToken, user }`. Access tokens
+expire in 15 minutes; exchange the refresh token at `POST /auth/refresh`.
+
+A newly registered account is `PENDING_VERIFICATION` and cannot sign in until it
+confirms the 6-digit code sent to its e-mail. In development the code is written
+to the API log rather than actually e-mailed.
+
+## Endpoints
+
+### Auth (`/auth`)
+`POST register` · `POST verify-otp` · `POST resend-otp` · `POST login` ·
+`POST refresh` · `POST forgot-password` · `POST reset-password` · `GET me`
+
+### Users (`/users`)
+`GET me` · `PATCH me` · `PATCH me/password` · `GET :id` (public seller profile) ·
+`POST staff` (admin only — creates appraiser and administrator accounts)
+
+### Listings (`/listings`)
+`GET /` — search and filtering. Query parameters: `q`, `category`, `condition`,
+`listingType`, `minPrice`, `maxPrice`, `verifiedOnly`, `featuredOnly`,
+`sellerId`, `sort` (`newest` · `price_asc` · `price_desc` · `ending_soonest` ·
+`popularity`), `page`, `limit`.
+
+`GET featured` · `GET categories` · `GET mine` (seller) · `POST /` ·
+`PATCH :id` · `DELETE :id` (withdraw) · `GET :id`
+
+Listing search and detail are open to guests; the detail route also returns the
+seller their own listing while it is still under review.
+
+### Certificates and verification
+`POST listings/:id/certificates` (seller) ·
+`GET listings/:id/certificates` (seller, appraiser) ·
+`GET verification/queue` (appraiser) ·
+`POST listings/:id/verification` (appraiser) ·
+`GET listings/:id/verification` (public history)
+
+### Auctions and bidding
+`POST listings/:id/auction` (seller) · `GET auctions/:id` ·
+`GET auctions/:id/bids` · `POST auctions/:id/bids` ·
+`POST auctions/:id/buy-now` · `GET bids/mine`
+
+### Orders and payments
+`POST orders/checkout` · `GET orders` · `GET orders/sales` · `GET orders/:id` ·
+`PATCH orders/:id/status` · `POST orders/:id/disputes` ·
+`POST payments/callback` (public; the provider's signature is its
+authentication)
+
+### Notifications
+`GET notifications` · `GET notifications/unread-count` ·
+`PATCH notifications/:id/read` · `PATCH notifications/read-all`
+
+### Administration
+`POST reports` (any signed-in user) · `GET admin/users` ·
+`PATCH admin/users/:id/suspend` · `PATCH admin/users/:id/reinstate` ·
+`PATCH admin/listings/:id/moderate` · `GET admin/reports` ·
+`PATCH admin/reports/:id/resolve` · `GET admin/disputes` ·
+`PATCH admin/disputes/:id/resolve` · `GET admin/analytics` · `GET admin/audit-log`
+
+### Health
+`GET /health` (liveness) · `GET /ready` (liveness plus a database round-trip).
+The container starts even when the database is briefly unreachable, so `/ready`
+can report the real state and Cloud Run can retry.
+
+## Live bidding over WebSocket — for Member 2
+
+Socket.IO namespace `/auctions`.
+
+```ts
+const socket = io(`${API_URL}/auctions`);
+socket.emit('auction:subscribe', { auctionId });
+
+socket.on('auction:bid', (e) => /* e.currentPrice, e.bidCount, e.bidder, e.endTime */);
+socket.on('auction:extended', (e) => /* e.endTime — anti-snipe pushed the close out */);
+socket.on('auction:closed', (e) => /* e.finalPrice, e.winner */);
+```
+
+Bids are **placed over REST** (`POST /auctions/:id/bids`), not over the socket,
+so bid rules are enforced in exactly one place. The socket only reports what
+already happened. Subscribing is open to guests, so a visitor comparing prices
+sees the counter move without signing in.
+
+## Where Member 4 plugs in
+
+Two interfaces are the seams for the external systems; neither needs any change
+to a business module.
+
+**Payments** — implement `PaymentGateway`
+(`src/orders/payments/payment-gateway.ts`) for PayHere or Stripe and swap the
+provider in `src/orders/orders.module.ts`:
+
+```ts
+{ provide: PAYMENT_GATEWAY, useClass: PayHereGateway }
+```
+
+`verifyCallback` must verify the provider's signature and return `null` when it
+fails — an unverified callback would let anyone mark an order as paid. The order
+module already makes the update idempotent on `transactionRef`, so a provider
+retrying a callback cannot double-charge a buyer.
+
+**E-mail and SMS** — implement `NotificationTransport`
+(`src/notifications/notification-dispatcher.ts`) and swap the transports in
+`src/notifications/notifications.module.ts`:
+
+```ts
+{ provide: EMAIL_TRANSPORT, useClass: NodemailerTransport },
+{ provide: SMS_TRANSPORT, useClass: TwilioTransport }
+```
+
+Delivery already runs off the request path with exponential-backoff retries, so
+a slow provider never adds latency to bidding or checkout. Replacing the
+in-memory retry queue in `NotificationsService` with Bull/Redis is a change
+local to that file.
+
+**Storage** — the API stores object *URLs*, never file bytes. Have the client
+request a signed upload URL, upload straight to GCS, and post the resulting URL
+to `POST /listings` or `POST /listings/:id/certificates`. Large files never pass
+through NestJS.
+
+## Where Member 5 plugs in
+
+- Build: `npm ci && npx prisma generate && npm run build`, start with
+  `node dist/main.js`. `npx prisma migrate deploy` must run against the database
+  before the new revision takes traffic.
+- Probes: `/health` for liveness, `/ready` for readiness.
+- Required environment variables are listed in `.env.example`. `CORS_ORIGINS` is
+  a comma-separated list and must include both deployed frontend origins.
+- The scheduled auction jobs run in-process. If the backend is scaled to more
+  than one instance, either pin the scheduler to a single revision or move the
+  sweep to Cloud Scheduler calling an internal endpoint — otherwise every
+  instance runs the same sweep. The settlement transaction re-checks state, so
+  duplicate runs are safe, just wasteful.
+
+## Design decisions worth knowing
+
+**One database, ACID transactions.** Bidding, auction settlement and checkout
+each run inside a serializable transaction. Two people bidding at the same
+instant cannot both be accepted, and two buyers cannot check out the same item.
+Postgres aborts the losing transaction and the bid is retried against the newer
+price, which the bidder never sees.
+
+**Closed by default.** `JwtAuthGuard` and `RolesGuard` are global. A new route is
+protected unless it explicitly opts out with `@Public()`. The JWT strategy
+re-reads the account on each request, so suspending a user revokes access
+immediately rather than whenever their token happens to expire.
+
+**Side effects never block the request.** Notifications, the popularity counter
+and socket broadcasts all happen after the transaction commits, and a failure in
+any of them cannot undo an accepted bid or a completed checkout.
+
+## Tests
 
 ```bash
-# development
-$ npm run start
-
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
+npm test           # unit tests
+npm run test:e2e   # needs a running database
 ```
 
-## Run tests
-
-```bash
-# unit tests
-$ npm run test
-
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
-```
-
-## Deployment
-
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
-
-```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
-```
-
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
-
-## Resources
-
-Check out a few resources that may come in handy when working with NestJS:
-
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
-
-## Support
-
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
-
-## Stay in touch
-
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
-
-## License
-
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+The unit tests cover the two services where a mistake is most expensive: bid
+validation, the anti-snipe extension and Buy Now in `AuctionsService`, and
+registration, login, OTP verification and password reset in `AuthService`.

@@ -126,7 +126,9 @@ export class AuthService {
     if (user && user.status === UserStatus.PENDING_VERIFICATION) {
       await this.issueOtp(user);
     }
-    return { message: 'If that account needs verification, a code has been sent.' };
+    return {
+      message: 'If that account needs verification, a code has been sent.',
+    };
   }
 
   async verifyOtp(dto: VerifyOtpDto) {
@@ -262,7 +264,9 @@ export class AuthService {
       },
     });
     if (!token) {
-      throw new BadRequestException('This reset link is invalid or has expired');
+      throw new BadRequestException(
+        'This reset link is invalid or has expired',
+      );
     }
 
     await this.prisma.$transaction([

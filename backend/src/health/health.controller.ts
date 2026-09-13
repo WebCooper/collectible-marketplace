@@ -1,7 +1,10 @@
 import { Controller, Get } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { PrismaService } from '../prisma/prisma.service';
+import { Public } from '../common/decorators/public.decorator';
 
+// Cloud Run's probes cannot present a JWT, so these two routes stay open.
+@Public()
 @ApiTags('health')
 @Controller()
 export class HealthController {

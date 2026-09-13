@@ -46,7 +46,11 @@ export class SuspendUserDto {
 
 export class ModerateListingDto {
   @ApiProperty({
-    enum: [ListingStatus.ACTIVE, ListingStatus.REMOVED, ListingStatus.UNDER_REVIEW],
+    enum: [
+      ListingStatus.ACTIVE,
+      ListingStatus.REMOVED,
+      ListingStatus.UNDER_REVIEW,
+    ],
     description: 'Approve (ACTIVE), remove (REMOVED) or send back for review',
   })
   @IsEnum(ListingStatus)
@@ -65,12 +69,16 @@ export class CreateReportDto {
   targetType: ReportTargetType;
 
   @ApiPropertyOptional({ description: 'Required when reporting a listing' })
-  @ValidateIf((dto: CreateReportDto) => dto.targetType === ReportTargetType.LISTING)
+  @ValidateIf(
+    (dto: CreateReportDto) => dto.targetType === ReportTargetType.LISTING,
+  )
   @IsUUID()
   reportedListingId?: string;
 
   @ApiPropertyOptional({ description: 'Required when reporting a user' })
-  @ValidateIf((dto: CreateReportDto) => dto.targetType === ReportTargetType.USER)
+  @ValidateIf(
+    (dto: CreateReportDto) => dto.targetType === ReportTargetType.USER,
+  )
   @IsUUID()
   reportedUserId?: string;
 
@@ -104,7 +112,9 @@ export class ResolveDisputeDto {
   @IsEnum(DisputeStatus)
   status: DisputeStatus;
 
-  @ApiProperty({ example: 'Refunded the buyer in full after inspecting photos' })
+  @ApiProperty({
+    example: 'Refunded the buyer in full after inspecting photos',
+  })
   @IsString()
   @MinLength(5)
   @MaxLength(1000)

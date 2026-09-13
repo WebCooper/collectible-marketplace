@@ -1,10 +1,7 @@
 import { Inject, Injectable, Logger, Optional } from '@nestjs/common';
 import { NotificationChannel, NotificationType, Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
-import {
-  PaginationDto,
-  paginate,
-} from '../common/dto/pagination.dto';
+import { PaginationDto, paginate } from '../common/dto/pagination.dto';
 import { EMAIL_TRANSPORT, SMS_TRANSPORT } from './notification-dispatcher';
 import type {
   NotificationTransport,
@@ -27,9 +24,11 @@ export class NotificationsService {
 
   constructor(
     private readonly prisma: PrismaService,
-    @Optional() @Inject(EMAIL_TRANSPORT)
+    @Optional()
+    @Inject(EMAIL_TRANSPORT)
     private readonly emailTransport?: NotificationTransport,
-    @Optional() @Inject(SMS_TRANSPORT)
+    @Optional()
+    @Inject(SMS_TRANSPORT)
     private readonly smsTransport?: NotificationTransport,
   ) {}
 

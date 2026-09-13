@@ -69,7 +69,13 @@ export class AdminService {
           status: true,
           emailVerified: true,
           createdAt: true,
-          _count: { select: { listings: true, ordersAsBuyer: true, reportsAgainst: true } },
+          _count: {
+            select: {
+              listings: true,
+              ordersAsBuyer: true,
+              reportsAgainst: true,
+            },
+          },
         },
       }),
       this.prisma.user.count({ where }),
@@ -78,14 +84,20 @@ export class AdminService {
     return paginate(data, total, query);
   }
 
-  async suspendUser(admin: AuthenticatedUser, userId: string, dto: SuspendUserDto) {
+  async suspendUser(
+    admin: AuthenticatedUser,
+    userId: string,
+    dto: SuspendUserDto,
+  ) {
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
     if (!user) throw new NotFoundException('User not found');
 
     // Without this an administrator could lock themselves, or each other, out
     // of the platform entirely.
     if (user.role === Role.ADMIN) {
-      throw new BadRequestException('Administrator accounts cannot be suspended');
+      throw new BadRequestException(
+        'Administrator accounts cannot be suspended',
+      );
     }
     if (user.status === UserStatus.SUSPENDED) {
       throw new ConflictException('This account is already suspended');
@@ -282,7 +294,9 @@ export class AdminService {
         include: {
           reporter: { select: { id: true, name: true, email: true } },
           reportedListing: { select: { id: true, title: true, status: true } },
-          reportedUser: { select: { id: true, name: true, email: true, status: true } },
+          reportedUser: {
+            select: { id: true, name: true, email: true, status: true },
+          },
         },
       }),
       this.prisma.report.count({ where }),
@@ -300,7 +314,10 @@ export class AdminService {
       where: { id: reportId },
     });
     if (!report) throw new NotFoundException('Report not found');
-    if (report.status === ReportStatus.ACTIONED || report.status === ReportStatus.DISMISSED) {
+    if (
+      report.status === ReportStatus.ACTIONED ||
+      report.status === ReportStatus.DISMISSED
+    ) {
       throw new ConflictException('This report has already been resolved');
     }
 
@@ -366,7 +383,9 @@ export class AdminService {
   ) {
     const dispute = await this.prisma.dispute.findUnique({
       where: { id: disputeId },
-      include: { order: { select: { buyerId: true, sellerId: true, id: true } } },
+      include: {
+        order: { select: { buyerId: true, sellerId: true, id: true } },
+      },
     });
     if (!dispute) throw new NotFoundException('Dispute not found');
     if (
@@ -437,18 +456,26 @@ export class AdminService {
       this.prisma.user.count(),
       this.prisma.user.count({ where: { status: UserStatus.SUSPENDED } }),
       this.prisma.listing.count({ where: { status: ListingStatus.ACTIVE } }),
-      this.prisma.listing.count({ where: { status: ListingStatus.UNDER_REVIEW } }),
+      this.prisma.listing.count({
+        where: { status: ListingStatus.UNDER_REVIEW },
+      }),
       this.prisma.order.count({ where: { status: OrderStatus.COMPLETED } }),
       this.prisma.report.count({
         where: { status: { in: [ReportStatus.OPEN, ReportStatus.REVIEWING] } },
       }),
       this.prisma.dispute.count({
-        where: { status: { in: [DisputeStatus.OPEN, DisputeStatus.UNDER_REVIEW] } },
+        where: {
+          status: { in: [DisputeStatus.OPEN, DisputeStatus.UNDER_REVIEW] },
+        },
       }),
       this.prisma.auction.count({ where: { status: 'ACTIVE' } }),
       this.prisma.order.aggregate({
         _sum: { amount: true },
-        where: { status: { in: [OrderStatus.PAID, OrderStatus.SHIPPED, OrderStatus.COMPLETED] } },
+        where: {
+          status: {
+            in: [OrderStatus.PAID, OrderStatus.SHIPPED, OrderStatus.COMPLETED],
+          },
+        },
       }),
       this.prisma.user.count({
         where: {
@@ -469,7 +496,11 @@ export class AdminService {
     });
 
     return {
-      users: { total: totalUsers, suspended: suspendedUsers, newThisMonth: newUsersThisMonth },
+      users: {
+        total: totalUsers,
+        suspended: suspendedUsers,
+        newThisMonth: newUsersThisMonth,
+      },
       listings: {
         active: activeListings,
         underReview: listingsUnderReview,

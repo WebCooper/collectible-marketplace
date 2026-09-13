@@ -17,7 +17,9 @@ async function bootstrap() {
   app.use(cookieParser());
 
   app.enableCors({
-    origin: (process.env.CORS_ORIGINS ?? 'http://localhost:3000,http://localhost:5173')
+    origin: (
+      process.env.CORS_ORIGINS ?? 'http://localhost:3000,http://localhost:5173'
+    )
       .split(',')
       .map((o) => o.trim()),
     credentials: true,
@@ -43,6 +45,9 @@ async function bootstrap() {
   SwaggerModule.setup('api', app, SwaggerModule.createDocument(app, config));
 
   await app.listen(port);
-  Logger.log(`API listening on http://localhost:${port} (docs at /api)`, 'Bootstrap');
+  Logger.log(
+    `API listening on http://localhost:${port} (docs at /api)`,
+    'Bootstrap',
+  );
 }
 void bootstrap();

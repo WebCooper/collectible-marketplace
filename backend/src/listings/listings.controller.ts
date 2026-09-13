@@ -40,7 +40,9 @@ export class ListingsController {
   @Public()
   @Get('featured')
   @ApiOperation({ summary: 'Rare and featured collectibles for the homepage' })
-  featured(@Query('limit', new ParseIntPipe({ optional: true })) limit?: number) {
+  featured(
+    @Query('limit', new ParseIntPipe({ optional: true })) limit?: number,
+  ) {
     return this.listings.featured(limit ?? 8);
   }
 

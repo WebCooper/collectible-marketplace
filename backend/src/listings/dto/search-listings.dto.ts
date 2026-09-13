@@ -23,7 +23,8 @@ export enum ListingSort {
 
 export class SearchListingsDto extends PaginationDto {
   @ApiPropertyOptional({
-    description: 'Keyword matched against title, description, era and denomination',
+    description:
+      'Keyword matched against title, description, era and denomination',
   })
   @IsOptional()
   @IsString()
@@ -59,7 +60,9 @@ export class SearchListingsDto extends PaginationDto {
   @Min(0)
   maxPrice?: number;
 
-  @ApiPropertyOptional({ description: 'Only listings that passed expert review' })
+  @ApiPropertyOptional({
+    description: 'Only listings that passed expert review',
+  })
   @IsOptional()
   @Transform(({ value }) => value === true || value === 'true')
   @IsBoolean()

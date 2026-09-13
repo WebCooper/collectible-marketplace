@@ -9,7 +9,11 @@ import { ConfigService } from '@nestjs/config';
 import { ListingStatus, Prisma, Role, UserStatus } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 import { PrismaService } from '../prisma/prisma.service';
-import { ChangePasswordDto, CreateStaffUserDto, UpdateProfileDto } from './dto/user.dto';
+import {
+  ChangePasswordDto,
+  CreateStaffUserDto,
+  UpdateProfileDto,
+} from './dto/user.dto';
 
 /// Columns safe to return to the owner of the account. Never includes
 /// passwordHash.

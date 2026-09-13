@@ -45,8 +45,9 @@ export interface AuctionClosedEvent {
 @WebSocketGateway({
   namespace: '/auctions',
   cors: {
-    origin: (process.env.CORS_ORIGINS ??
-      'http://localhost:3000,http://localhost:5173')
+    origin: (
+      process.env.CORS_ORIGINS ?? 'http://localhost:3000,http://localhost:5173'
+    )
       .split(',')
       .map((o) => o.trim()),
     credentials: true,

@@ -38,7 +38,11 @@ export class AuctionsService {
 
   // --- Seller: configure the auction --------------------------------------
 
-  async create(user: AuthenticatedUser, listingId: string, dto: CreateAuctionDto) {
+  async create(
+    user: AuthenticatedUser,
+    listingId: string,
+    dto: CreateAuctionDto,
+  ) {
     const listing = await this.listings.findOwned(user, listingId);
 
     const existing = await this.prisma.auction.findUnique({
@@ -129,12 +133,19 @@ export class AuctionsService {
 
           if (!auction) throw new NotFoundException('Auction not found');
           if (auction.listing.sellerId === user.id) {
-            throw new ForbiddenException('A seller cannot bid on their own item');
+            throw new ForbiddenException(
+              'A seller cannot bid on their own item',
+            );
           }
 
           const now = new Date();
-          if (auction.status !== AuctionStatus.ACTIVE || auction.startTime > now) {
-            throw new BadRequestException('This auction is not open for bidding');
+          if (
+            auction.status !== AuctionStatus.ACTIVE ||
+            auction.startTime > now
+          ) {
+            throw new BadRequestException(
+              'This auction is not open for bidding',
+            );
           }
           // Bids arriving after the close are rejected outright (FR 2.1.5).
           if (auction.endTime <= now) {
@@ -195,7 +206,13 @@ export class AuctionsService {
             },
           });
 
-          return { bid, auction: updated, previousTop, extended, listing: auction.listing };
+          return {
+            bid,
+            auction: updated,
+            previousTop,
+            extended,
+            listing: auction.listing,
+          };
         },
         { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
       ),

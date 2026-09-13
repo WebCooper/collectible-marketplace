@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { Role } from '@prisma/client';
+import type { Request } from 'express';
 import { ROLES_KEY } from '../../common/decorators/roles.decorator';
 import { AuthenticatedUser } from '../../common/decorators/current-user.decorator';
 
@@ -23,8 +24,8 @@ export class RolesGuard implements CanActivate {
 
     if (!required?.length) return true;
 
-    const user = context.switchToHttp().getRequest()
-      .user as AuthenticatedUser | undefined;
+    const request = context.switchToHttp().getRequest<Request>();
+    const user = request.user as AuthenticatedUser | undefined;
 
     // Administrators are trusted everywhere - they moderate every surface.
     if (user?.role === Role.ADMIN) return true;

@@ -136,7 +136,9 @@ export class AdminController {
 
   @Get('audit-log')
   @ApiOperation({ summary: 'Recent administrative activity' })
-  auditLog(@Query('limit', new ParseIntPipe({ optional: true })) limit?: number) {
+  auditLog(
+    @Query('limit', new ParseIntPipe({ optional: true })) limit?: number,
+  ) {
     return this.admin.auditLog(limit ?? 50);
   }
 }

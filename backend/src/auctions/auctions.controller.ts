@@ -14,7 +14,11 @@ import type { AuthenticatedUser } from '../common/decorators/current-user.decora
 import { Public } from '../common/decorators/public.decorator';
 import { Roles } from '../common/decorators/roles.decorator';
 import { AuctionsService } from './auctions.service';
-import { BidHistoryDto, CreateAuctionDto, PlaceBidDto } from './dto/auction.dto';
+import {
+  BidHistoryDto,
+  CreateAuctionDto,
+  PlaceBidDto,
+} from './dto/auction.dto';
 
 @ApiTags('auctions & bidding')
 @Controller()

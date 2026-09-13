@@ -226,7 +226,10 @@ export class CertificatesService {
     listingId: string,
     dto: VerificationDecisionDto,
   ) {
-    const messages: Record<VerificationDecision, [NotificationType, string, string]> = {
+    const messages: Record<
+      VerificationDecision,
+      [NotificationType, string, string]
+    > = {
       [VerificationDecision.APPROVED]: [
         NotificationType.LISTING_APPROVED,
         'Listing approved',

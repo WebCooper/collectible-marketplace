@@ -141,7 +141,10 @@ export class ListingsService {
           status: ListingStatus.UNDER_REVIEW,
           isVerified: false,
         },
-        include: { images: { orderBy: { position: 'asc' } }, certificates: true },
+        include: {
+          images: { orderBy: { position: 'asc' } },
+          certificates: true,
+        },
       });
     });
   }

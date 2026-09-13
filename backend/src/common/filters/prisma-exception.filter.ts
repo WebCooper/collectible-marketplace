@@ -40,7 +40,10 @@ export class PrismaExceptionFilter implements ExceptionFilter {
           message: 'Related record does not exist',
         });
       default:
-        this.logger.error(`Unhandled Prisma error ${exception.code}`, exception.stack);
+        this.logger.error(
+          `Unhandled Prisma error ${exception.code}`,
+          exception.stack,
+        );
         return response.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
           statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
           message: 'Internal server error',

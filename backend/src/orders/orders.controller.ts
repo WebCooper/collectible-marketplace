@@ -30,7 +30,9 @@ export class OrdersController {
 
   @Post('orders/checkout')
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Check out an auction win or a fixed-price listing' })
+  @ApiOperation({
+    summary: 'Check out an auction win or a fixed-price listing',
+  })
   checkout(@CurrentUser() user: AuthenticatedUser, @Body() dto: CheckoutDto) {
     return this.orders.checkout(user, dto);
   }
@@ -57,7 +59,9 @@ export class OrdersController {
 
   @Get('orders/:id')
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'One order, visible to its buyer, seller or an admin' })
+  @ApiOperation({
+    summary: 'One order, visible to its buyer, seller or an admin',
+  })
   findOne(
     @CurrentUser() user: AuthenticatedUser,
     @Param('id', ParseUUIDPipe) id: string,
