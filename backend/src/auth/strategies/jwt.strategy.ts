@@ -6,7 +6,8 @@ import { ExtractJwt, Strategy } from 'passport-jwt';
 import { PrismaService } from '../../prisma/prisma.service';
 import { AuthenticatedUser } from '../../common/decorators/current-user.decorator';
 
-export interface JwtPayload {
+/// Claims carried in the signed access token.
+export interface JwtTokenPayload {
   sub: string;
   email: string;
   role: AuthenticatedUser['role'];
@@ -33,7 +34,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   /// Validating against the database on every request costs one indexed lookup
   /// but means a suspended account loses access immediately rather than when
   /// its token happens to expire.
-  async validate(payload: JwtPayload): Promise<AuthenticatedUser> {
+  async validate(payload: JwtTokenPayload): Promise<AuthenticatedUser> {
     const user = await this.prisma.user.findUnique({
       where: { id: payload.sub },
       select: { id: true, email: true, role: true, status: true },

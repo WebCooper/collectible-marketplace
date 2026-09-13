@@ -1,6 +1,7 @@
 import { Logger, ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import cookieParser from 'cookie-parser';
 import { AppModule } from './app.module';
 import { PrismaExceptionFilter } from './common/filters/prisma-exception.filter';
 
@@ -10,6 +11,10 @@ async function bootstrap() {
   // The client (Next.js) owns port 3000 and the admin panel (Vite) owns 5173,
   // so the API defaults to 3001. See the team's shared decisions.
   const port = process.env.PORT ?? 3001;
+
+  // The client stores its access token in an httpOnly cookie, so the JWT
+  // strategy needs parsed cookies.
+  app.use(cookieParser());
 
   app.enableCors({
     origin: (process.env.CORS_ORIGINS ?? 'http://localhost:3000,http://localhost:5173')
