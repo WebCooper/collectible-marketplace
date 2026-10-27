@@ -428,6 +428,13 @@ export class OrdersService {
     const isBuyer = order.buyerId === user.id;
     const isAdmin = user.role === Role.ADMIN;
 
+    // Payment is confirmed by the provider's signed callback. Letting a buyer or
+    // seller set PAID themselves would let an unpaid order be shipped.
+    if (dto.status === OrderStatus.PAID && !isAdmin) {
+      throw new ForbiddenException(
+        'An order is marked paid by the payment provider, not by its parties',
+      );
+    }
     if (dto.status === OrderStatus.SHIPPED && !isSeller && !isAdmin) {
       throw new ForbiddenException('Only the seller can mark an order shipped');
     }

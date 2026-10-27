@@ -1,8 +1,9 @@
 import { Logger, ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
-import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { SwaggerModule } from '@nestjs/swagger';
 import cookieParser from 'cookie-parser';
 import { AppModule } from './app.module';
+import { buildOpenApiDocument } from './swagger';
 import { PrismaExceptionFilter } from './common/filters/prisma-exception.filter';
 
 async function bootstrap() {
@@ -34,15 +35,7 @@ async function bootstrap() {
   );
   app.useGlobalFilters(new PrismaExceptionFilter());
 
-  const config = new DocumentBuilder()
-    .setTitle('Sri Lankan Collectible Marketplace API')
-    .setDescription(
-      'REST + WebSocket API backing the collectible marketplace (EC8208).',
-    )
-    .setVersion('1.0')
-    .addBearerAuth()
-    .build();
-  SwaggerModule.setup('api', app, SwaggerModule.createDocument(app, config));
+  SwaggerModule.setup('api', app, buildOpenApiDocument(app));
 
   await app.listen(port);
   Logger.log(

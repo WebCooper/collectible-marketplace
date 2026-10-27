@@ -1,5 +1,5 @@
 import { Test } from '@nestjs/testing';
-import { BadRequestException } from '@nestjs/common';
+import { BadRequestException, ForbiddenException } from '@nestjs/common';
 import {
   ListingStatus,
   OrderStatus,
@@ -172,6 +172,32 @@ describe('OrdersService', () => {
 
     beforeEach(() => {
       prisma.order.update.mockResolvedValue({ listing: { title: 'x' } });
+    });
+
+    it.each(['buyer-1', 'seller-1'])(
+      'stops %s from marking an order paid',
+      async (id) => {
+        prisma.order.findUnique.mockResolvedValue(orderRow(null));
+
+        await expect(
+          service.updateStatus(
+            { id, email: 'p@x.lk', role: 'BUYER' },
+            'order-1',
+            { status: OrderStatus.PAID },
+          ),
+        ).rejects.toThrow(ForbiddenException);
+        expect(prisma.order.update).not.toHaveBeenCalled();
+      },
+    );
+
+    it('lets an administrator reconcile a payment manually', async () => {
+      prisma.order.findUnique.mockResolvedValue(orderRow(null));
+
+      await service.updateStatus(admin, 'order-1', {
+        status: OrderStatus.PAID,
+      });
+
+      expect(prisma.order.update).toHaveBeenCalled();
     });
 
     it('relists the item when a fixed-price order is cancelled', async () => {
