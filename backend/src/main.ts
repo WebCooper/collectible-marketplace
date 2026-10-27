@@ -1,8 +1,46 @@
+import { Logger, ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
+import { SwaggerModule } from '@nestjs/swagger';
+import cookieParser from 'cookie-parser';
 import { AppModule } from './app.module';
+import { buildOpenApiDocument } from './swagger';
+import { PrismaExceptionFilter } from './common/filters/prisma-exception.filter';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  await app.listen(process.env.PORT ?? 3000);
+
+  // The client (Next.js) owns port 3000 and the admin panel (Vite) owns 5173,
+  // so the API defaults to 3001. See the team's shared decisions.
+  const port = process.env.PORT ?? 3001;
+
+  // The client stores its access token in an httpOnly cookie, so the JWT
+  // strategy needs parsed cookies.
+  app.use(cookieParser());
+
+  app.enableCors({
+    origin: (
+      process.env.CORS_ORIGINS ?? 'http://localhost:3000,http://localhost:5173'
+    )
+      .split(',')
+      .map((o) => o.trim()),
+    credentials: true,
+  });
+
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      forbidNonWhitelisted: true,
+      transform: true,
+    }),
+  );
+  app.useGlobalFilters(new PrismaExceptionFilter());
+
+  SwaggerModule.setup('api', app, buildOpenApiDocument(app));
+
+  await app.listen(port);
+  Logger.log(
+    `API listening on http://localhost:${port} (docs at /api)`,
+    'Bootstrap',
+  );
 }
-bootstrap();
+void bootstrap();
