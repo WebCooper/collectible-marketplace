@@ -1,26 +1,35 @@
 @import "tailwindcss";
 
 :root {
-  --background: #07090e;
-  --foreground: #f4f4f5;
-  --card: #0c0f17;
-  --card-foreground: #f4f4f5;
-  --popover: #0c0f17;
-  --popover-foreground: #f4f4f5;
-  --primary: #d4af37;
-  --primary-foreground: #090a0f;
-  --secondary: #161b26;
-  --secondary-foreground: #f4f4f5;
-  --muted: #1e2433;
-  --muted-foreground: #94a3b8;
-  --accent: #d4af37;
-  --accent-foreground: #090a0f;
-  --destructive: #ef4444;
-  --destructive-foreground: #f8fafc;
-  --border: rgba(255, 255, 255, 0.1);
-  --input: rgba(255, 255, 255, 0.12);
-  --ring: #d4af37;
-  --radius: 0.875rem;
+  /* Numismatic Futurism Palette */
+  --background: #0a0e17; /* Near-black navy */
+  --foreground: #f4f6fa;
+  --card: rgba(14, 20, 32, 0.7);
+  --card-foreground: #f4f6fa;
+  --popover: #0c121e;
+  --popover-foreground: #f4f6fa;
+  
+  /* Primary Accent: Antique Gold Gradient */
+  --gold-start: #c9a227;
+  --gold-end: #f1d27a;
+  --primary: #c9a227;
+  --primary-foreground: #0a0e17;
+
+  /* Secondary Accent: Cyan / Teal for Live Bidding & Auctions */
+  --cyan-auction: #22d3ee;
+  --cyan-auction-glow: rgba(34, 211, 238, 0.35);
+
+  --secondary: #121927;
+  --secondary-foreground: #f4f6fa;
+  --muted: #182235;
+  --muted-foreground: #8fa0be;
+  
+  /* Gold Foil Border */
+  --border: rgba(201, 162, 39, 0.2);
+  --border-gold-foil: rgba(201, 162, 39, 0.28);
+  --input: rgba(201, 162, 39, 0.16);
+  --ring: #c9a227;
+  --radius: 1rem;
 }
 
 @theme inline {
@@ -34,15 +43,11 @@
   --color-secondary-foreground: var(--secondary-foreground);
   --color-muted: var(--muted);
   --color-muted-foreground: var(--muted-foreground);
-  --color-accent: var(--accent);
-  --color-accent-foreground: var(--accent-foreground);
-  --color-destructive: var(--destructive);
-  --color-destructive-foreground: var(--destructive-foreground);
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
   --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-serif: var(--font-cinzel);
 }
 
 html {
@@ -51,42 +56,112 @@ html {
 }
 
 body {
-  background: #07090e;
-  color: #f4f4f5;
+  background-color: #0a0e17;
+  color: #f4f6fa;
   font-family: var(--font-geist-sans), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   overflow-x: hidden;
-  selection-background-color: #d4af37;
-  selection-color: #07090e;
 }
 
-/* Custom Luxury Scrollbar */
+/* Antique Gold Gradient Text */
+.gold-gradient-text {
+  background: linear-gradient(135deg, #f1d27a 0%, #c9a227 50%, #977413 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Cyan Auction Accent Text */
+.cyan-gradient-text {
+  background: linear-gradient(135deg, #67e8f9 0%, #22d3ee 50%, #06b6d4 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Numismatic Futurism Glass Card */
+.card-numismatic {
+  background: rgba(12, 18, 30, 0.65);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(201, 162, 39, 0.22);
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.7);
+  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.card-numismatic:hover {
+  border-color: rgba(201, 162, 39, 0.45);
+  box-shadow: 0 20px 40px -15px rgba(201, 162, 39, 0.15), 0 0 25px rgba(34, 211, 238, 0.08);
+  transform: translateY(-4px);
+}
+
+/* Subtle Coin Glint Shimmer Effect */
+@keyframes coinGlint {
+  0% {
+    transform: translateX(-150%) skewX(-25deg);
+    opacity: 0;
+  }
+  30% {
+    opacity: 0.6;
+  }
+  60%, 100% {
+    transform: translateX(250%) skewX(-25deg);
+    opacity: 0;
+  }
+}
+
+.animate-coin-glint {
+  position: relative;
+  overflow: hidden;
+}
+
+.animate-coin-glint::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 60%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(241, 210, 122, 0.25),
+    rgba(255, 255, 255, 0.4),
+    rgba(241, 210, 122, 0.25),
+    transparent
+  );
+  animation: coinGlint 5s ease-in-out infinite;
+  pointer-events: none;
+}
+
+/* Custom Scrollbar */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #07090e;
+  background: #0a0e17;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #1f2738;
+  background: #1c273d;
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #d4af37;
+  background: #c9a227;
 }
 
-/* Glassmorphism helpers */
-.glass-panel {
-  background: rgba(12, 15, 23, 0.7);
-  backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-}
-
+/* ── Gradient text utilities ───────────────────────────────────────────── */
 .gold-gradient-text {
-  background: linear-gradient(135deg, #fef08a 0%, #d4af37 50%, #b45309 100%);
+  background: linear-gradient(90deg, #c9a227 0%, #f1d27a 50%, #c9a227 100%);
   -webkit-background-clip: text;
+  background-clip: text;
   -webkit-text-fill-color: transparent;
+  color: transparent;
+}
+
+.cyan-gradient-text {
+  background: linear-gradient(90deg, #22d3ee 0%, #67e8f9 50%, #22d3ee 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
 }

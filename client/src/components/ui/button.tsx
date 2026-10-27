@@ -3,7 +3,7 @@ import { cn } from "@/lib/utils";
 
 export interface ButtonProps
   extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: "default" | "gold" | "outline" | "ghost" | "secondary" | "destructive";
+  variant?: "default" | "gold" | "cyan" | "outline" | "ghost" | "secondary" | "destructive";
   size?: "default" | "sm" | "lg" | "icon";
   isLoading?: boolean;
 }
@@ -11,27 +11,29 @@ export interface ButtonProps
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant = "default", size = "default", isLoading, children, disabled, ...props }, ref) => {
     const baseStyles =
-      "inline-flex items-center justify-center whitespace-nowrap rounded-lg text-sm font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500/50 disabled:pointer-events-none disabled:opacity-50 cursor-pointer active:scale-[0.98]";
+      "inline-flex items-center justify-center whitespace-nowrap rounded-xl text-sm font-medium transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#c9a227]/50 disabled:pointer-events-none disabled:opacity-50 cursor-pointer active:scale-[0.98]";
 
     const variants = {
       default:
-        "bg-white text-zinc-900 shadow-md hover:bg-zinc-100 hover:shadow-lg dark:bg-zinc-100 dark:text-zinc-950 dark:hover:bg-white",
+        "bg-white text-zinc-950 shadow-md hover:bg-zinc-100 dark:bg-zinc-100 dark:text-zinc-950 dark:hover:bg-white",
       gold:
-        "bg-gradient-to-r from-amber-500 via-amber-400 to-yellow-500 text-stone-950 font-semibold shadow-md shadow-amber-500/20 hover:shadow-lg hover:shadow-amber-500/30 hover:brightness-105 border border-amber-300/40",
+        "bg-gradient-to-r from-[#c9a227] via-[#e2be49] to-[#f1d27a] text-[#0a0e17] font-bold shadow-md shadow-[#c9a227]/25 hover:shadow-lg hover:shadow-[#c9a227]/35 hover:brightness-105 border border-[#f1d27a]/40",
+      cyan:
+        "bg-gradient-to-r from-cyan-500 to-teal-400 text-stone-950 font-bold shadow-md shadow-cyan-500/25 hover:shadow-lg hover:shadow-cyan-500/35 hover:brightness-105 border border-cyan-300/40",
       outline:
-        "border border-white/15 bg-white/5 backdrop-blur-sm text-zinc-200 hover:bg-white/10 hover:text-white hover:border-amber-500/40",
+        "border border-[rgba(201,162,39,0.3)] bg-[#0d1424]/40 backdrop-blur-md text-zinc-200 hover:bg-[#0d1424]/80 hover:text-white hover:border-[#c9a227]/60",
       ghost:
         "text-zinc-300 hover:bg-white/10 hover:text-white",
       secondary:
-        "bg-zinc-800/80 text-zinc-100 border border-zinc-700/60 hover:bg-zinc-700/80 hover:border-zinc-600",
+        "bg-[#131c2d] text-zinc-100 border border-[rgba(201,162,39,0.2)] hover:bg-[#1a263d] hover:border-[rgba(201,162,39,0.4)]",
       destructive:
         "bg-red-600/90 text-white hover:bg-red-600 shadow-sm",
     };
 
     const sizes = {
       default: "h-10 px-4 py-2",
-      sm: "h-8 rounded-md px-3 text-xs",
-      lg: "h-12 rounded-xl px-6 text-base font-semibold",
+      sm: "h-8 rounded-lg px-3 text-xs",
+      lg: "h-12 rounded-xl px-7 text-base font-semibold",
       icon: "h-10 w-10",
     };
 

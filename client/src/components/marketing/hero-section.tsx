@@ -1,233 +1,520 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useRef } from "react";
 import Link from "next/link";
-import Image from "next/image";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { formatCurrency } from "@/lib/utils";
+import {
+  motion,
+  useReducedMotion,
+  useScroll,
+  useTransform,
+  Variants,
+} from "framer-motion";
 import {
   ShieldCheck,
-  Sparkles,
-  ArrowRight,
-  Flame,
-  CheckCircle2,
   Lock,
-  Clock,
-  Coins,
-  Award,
+  BadgeCheck,
+  ArrowRight,
+  Sparkles,
+  ChevronDown,
 } from "lucide-react";
 
-export function HeroSection() {
-  const [heroBid, setHeroBid] = useState(385000);
-  const [bidPlaced, setBidPlaced] = useState(false);
+import { AnimatedBackground } from "@/components/shared/animated-background";
+import { Button } from "@/components/ui/button";
+import {
+  MOTION_TOKENS,
+  staggerContainer,
+} from "@/lib/motion";
 
-  const handleQuickBid = (increment: number) => {
-    setHeroBid((prev) => prev + increment);
-    setBidPlaced(true);
-    setTimeout(() => setBidPlaced(false), 3000);
+// ---------------------------------------------------------------------------
+// Motion variant factories — collapsed to zero motion when user prefers it
+// ---------------------------------------------------------------------------
+function makeSlideUp(shouldReduce: boolean): Variants {
+  if (shouldReduce) {
+    return {
+      hidden: { opacity: 0 },
+      visible: { opacity: 1, transition: { duration: 0.3 } },
+    };
+  }
+  return {
+    hidden: { opacity: 0, y: 28, filter: "blur(4px)" },
+    visible: {
+      opacity: 1,
+      y: 0,
+      filter: "blur(0px)",
+      transition: {
+        duration: MOTION_TOKENS.duration.luxurious,
+        ease: MOTION_TOKENS.ease.expoOut,
+      },
+    },
   };
+}
+
+function makeHeroContainer(shouldReduce: boolean): Variants {
+  return {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: shouldReduce ? 0 : 0.13,
+        delayChildren: shouldReduce ? 0 : 0.1,
+      },
+    },
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Collectible card data — placeholder items shown in the visual centerpiece
+// ---------------------------------------------------------------------------
+const COLLECTIBLES = [
+  {
+    id: "coin-1",
+    label: "1957 Buddha Jayanthi Crown",
+    sublabel: "0.925 Silver · PCGS MS-66 PL",
+    emoji: "🪙",
+    accent: "from-[#c9a227]/30 to-[#f1d27a]/10",
+    border: "border-[#c9a227]/40",
+    glow: "shadow-[0_0_32px_rgba(201,162,39,0.35)]",
+    rotate: -8,
+    offsetX: -120,
+    offsetY: -30,
+    delay: 0,
+    floatAmp: 10,
+    floatDur: 5.8,
+  },
+  {
+    id: "note-1",
+    label: "King George VI 1000 Rupees",
+    sublabel: "1941 Ceylon · PMG UNC 64 EPQ",
+    emoji: "💵",
+    accent: "from-emerald-500/20 to-teal-400/10",
+    border: "border-emerald-400/30",
+    glow: "shadow-[0_0_32px_rgba(52,211,153,0.22)]",
+    rotate: 4,
+    offsetX: 120,
+    offsetY: -50,
+    delay: 0.4,
+    floatAmp: 13,
+    floatDur: 6.5,
+  },
+  {
+    id: "stamp-1",
+    label: "1857 Chalon Head 6d",
+    sublabel: "Ceylon Imperf · Spink Superb 95",
+    emoji: "✉️",
+    accent: "from-indigo-500/20 to-blue-400/10",
+    border: "border-indigo-400/30",
+    glow: "shadow-[0_0_28px_rgba(99,102,241,0.22)]",
+    rotate: 12,
+    offsetX: 40,
+    offsetY: 80,
+    delay: 0.75,
+    floatAmp: 8,
+    floatDur: 7.1,
+  },
+  {
+    id: "medal-1",
+    label: "1948 Independence Medal",
+    sublabel: "Ceylon Police · Original Ribbon",
+    emoji: "🏅",
+    accent: "from-rose-500/20 to-amber-400/10",
+    border: "border-rose-400/30",
+    glow: "shadow-[0_0_26px_rgba(244,63,94,0.18)]",
+    rotate: -5,
+    offsetX: -60,
+    offsetY: 90,
+    delay: 1.05,
+    floatAmp: 11,
+    floatDur: 6.2,
+  },
+];
+
+// ---------------------------------------------------------------------------
+// Trust indicators
+// ---------------------------------------------------------------------------
+const TRUST_ITEMS = [
+  {
+    icon: BadgeCheck,
+    title: "Verified Sellers",
+    desc: "Every dealer is KYC-cleared by our Colombo curatorial board.",
+    color: "text-[#f1d27a]",
+    glow: "shadow-[0_0_20px_rgba(201,162,39,0.2)]",
+    border: "border-[rgba(201,162,39,0.25)]",
+  },
+  {
+    icon: Lock,
+    title: "Secure Escrow",
+    desc: "All funds held in CB-regulated commercial bank escrow until delivery.",
+    color: "text-cyan-400",
+    glow: "shadow-[0_0_20px_rgba(34,211,238,0.18)]",
+    border: "border-cyan-400/25",
+  },
+  {
+    icon: ShieldCheck,
+    title: "Certified Authenticity",
+    desc: "PCGS · NGC · PMG · SLNS spectral analysis on every lot.",
+    color: "text-emerald-400",
+    glow: "shadow-[0_0_20px_rgba(52,211,153,0.18)]",
+    border: "border-emerald-400/25",
+  },
+];
+
+// ---------------------------------------------------------------------------
+// Floating collectible card sub-component
+// ---------------------------------------------------------------------------
+interface FloatCardProps {
+  item: (typeof COLLECTIBLES)[number];
+  shouldReduce: boolean;
+}
+
+function FloatCard({ item, shouldReduce }: FloatCardProps) {
+  if (shouldReduce) {
+    return (
+      <div
+        key={item.id}
+        style={{ transform: `rotate(${item.rotate}deg)` }}
+        className={`
+          absolute w-44 rounded-2xl border ${item.border}
+          bg-gradient-to-br ${item.accent}
+          backdrop-blur-xl p-4 ${item.glow}
+          flex flex-col gap-2
+        `}
+      >
+        <span className="text-4xl">{item.emoji}</span>
+        <p className="text-xs font-bold text-white font-serif leading-tight">
+          {item.label}
+        </p>
+        <p className="text-[10px] text-zinc-400 font-mono">{item.sublabel}</p>
+      </div>
+    );
+  }
 
   return (
-    <section className="relative overflow-hidden pt-12 pb-20 md:pt-20 md:pb-32">
-      {/* Background illumination rings */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[500px] bg-gradient-to-tr from-amber-500/15 via-yellow-600/5 to-transparent rounded-full blur-3xl pointer-events-none -z-10" />
+    <motion.div
+      key={item.id}
+      className={`
+        absolute w-44 rounded-2xl border ${item.border}
+        bg-gradient-to-br ${item.accent}
+        backdrop-blur-xl p-4 ${item.glow}
+        flex flex-col gap-2 cursor-pointer select-none
+      `}
+      style={{ rotate: item.rotate }}
+      initial={{ opacity: 0, scale: 0.75, y: 20 }}
+      animate={{
+        opacity: 1,
+        scale: 1,
+        y: [0, -item.floatAmp, 0],
+        transition: {
+          opacity: {
+            delay: item.delay,
+            duration: 0.6,
+            ease: MOTION_TOKENS.ease.expoOut,
+          },
+          scale: {
+            delay: item.delay,
+            duration: 0.6,
+            ease: MOTION_TOKENS.ease.expoOut,
+          },
+          y: {
+            delay: item.delay + 0.5,
+            duration: item.floatDur,
+            repeat: Infinity,
+            repeatType: "reverse",
+            ease: "easeInOut",
+          },
+        },
+      }}
+      whileHover={{ scale: 1.07, zIndex: 20, transition: { duration: 0.2 } }}
+    >
+      <span className="text-4xl">{item.emoji}</span>
+      <p className="text-xs font-bold text-white font-serif leading-tight">
+        {item.label}
+      </p>
+      <p className="text-[10px] text-zinc-400 font-mono">{item.sublabel}</p>
+    </motion.div>
+  );
+}
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-center">
-          
-          {/* Left Column: Copy and CTAs */}
-          <div className="lg:col-span-7 space-y-8 text-center lg:text-left">
-            
-            {/* Top Curated Trust Tag */}
-            <div className="inline-flex items-center gap-2.5 px-3.5 py-1.5 rounded-full border border-amber-500/30 bg-amber-500/10 backdrop-blur-sm text-xs font-medium text-amber-300">
-              <Sparkles className="h-4 w-4 text-amber-400 animate-spin" style={{ animationDuration: "8s" }} />
-              <span>Direct Custody & Dual Lab Certification</span>
-              <span className="h-1 w-1 rounded-full bg-amber-400" />
-              <span className="text-zinc-300">PCGS • NGC • PMG • CGC</span>
+// ---------------------------------------------------------------------------
+// Main HeroSection
+// ---------------------------------------------------------------------------
+export function HeroSection() {
+  const shouldReduce = useReducedMotion() ?? false;
+
+  // Parallax scroll hook — the showcase shifts upward slightly as user scrolls
+  const heroRef = useRef<HTMLElement>(null);
+  const { scrollYProgress } = useScroll({
+    target: heroRef,
+    offset: ["start start", "end start"],
+  });
+  const showcaseY = useTransform(
+    scrollYProgress,
+    [0, 1],
+    shouldReduce ? [0, 0] : [0, -60]
+  );
+
+  // Variant factories
+  const slideUp = makeSlideUp(shouldReduce);
+  const containerVariants = makeHeroContainer(shouldReduce);
+
+  return (
+    <section
+      ref={heroRef}
+      className="relative min-h-[100svh] flex flex-col items-center justify-center overflow-hidden px-4 sm:px-6 lg:px-8"
+      aria-label="LankaNumis hero — Sri Lankan collectibles marketplace"
+    >
+      {/* Ambient animated background lives in fixed position */}
+      <AnimatedBackground intensity="vibrant" showGlints />
+
+      {/* ------------------------------------------------------------------ */}
+      {/* Main content grid                                                    */}
+      {/* ------------------------------------------------------------------ */}
+      <div className="relative z-10 w-full max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-8 items-center pt-20 pb-24 lg:pt-28 lg:pb-32">
+
+        {/* ---- LEFT: Text + CTAs ----------------------------------------- */}
+        <motion.div
+          className="flex flex-col items-center lg:items-start text-center lg:text-left space-y-7"
+          variants={containerVariants}
+          initial="hidden"
+          animate="visible"
+        >
+          {/* Eye-catcher tag */}
+          <motion.div variants={slideUp}>
+            <div className="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full border border-[rgba(201,162,39,0.4)] bg-[#101726]/90 backdrop-blur-sm text-xs font-mono text-[#f1d27a]">
+              <Sparkles
+                className="h-4 w-4 text-[#c9a227]"
+                style={
+                  shouldReduce
+                    ? {}
+                    : { animation: "spin 9s linear infinite" }
+                }
+              />
+              <span>Sri Lanka&apos;s Premier Certified Bourse</span>
+              <span className="h-1.5 w-1.5 rounded-full bg-cyan-400 animate-pulse" />
+              <span className="text-zinc-400">SLNS · PCGS · NGC · PMG</span>
             </div>
+          </motion.div>
 
-            {/* Main Headline */}
-            <div className="space-y-4">
-              <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold tracking-tight text-white font-serif leading-[1.15]">
-                Where Rare History Finds Its{" "}
-                <span className="bg-gradient-to-r from-amber-200 via-amber-400 to-yellow-500 bg-clip-text text-transparent underline decoration-amber-500/30 decoration-wavy decoration-2">
-                  True Custodian
+          {/* Headline */}
+          <motion.h1
+            variants={slideUp}
+            className="text-4xl sm:text-5xl md:text-6xl font-extrabold tracking-tight text-white font-serif leading-[1.1]"
+          >
+            Discover, Bid &amp; Preserve{" "}
+            <span className="gold-gradient-text decoration-wavy underline decoration-[#c9a227]/40 decoration-2">
+              2,300 Years
+            </span>{" "}
+            of Lankan Heritage
+          </motion.h1>
+
+          {/* Sub-headline */}
+          <motion.p
+            variants={slideUp}
+            className="text-base sm:text-lg text-zinc-300 leading-relaxed max-w-xl font-light"
+          >
+            Authenticated coins, historic currency notes, Ceylon stamps &amp; state medals — every lot spectral-verified and sold under Central Bank–regulated escrow. Buy and sell with absolute confidence.
+          </motion.p>
+
+          {/* CTAs */}
+          <motion.div
+            variants={slideUp}
+            className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 w-full sm:w-auto"
+          >
+            {/* Primary — gold gradient */}
+            <a href="#featured" className="w-full sm:w-auto">
+              <Button
+                variant="gold"
+                size="lg"
+                className="w-full sm:w-auto text-xs uppercase tracking-widest px-8 gap-2.5 shadow-xl shadow-[#c9a227]/25 font-mono"
+              >
+                <span>Explore Listings</span>
+                <ArrowRight className="h-4 w-4" />
+              </Button>
+            </a>
+
+            {/* Secondary — outline / ghost */}
+            <Link href="/signup" className="w-full sm:w-auto">
+              <Button
+                variant="outline"
+                size="lg"
+                className="w-full sm:w-auto text-xs uppercase tracking-widest px-7 font-mono border-[rgba(201,162,39,0.35)] hover:border-[#c9a227] hover:text-[#f1d27a]"
+              >
+                Start Selling
+              </Button>
+            </Link>
+          </motion.div>
+
+          {/* Mini social proof numbers */}
+          <motion.div
+            variants={slideUp}
+            className="flex flex-wrap items-center justify-center lg:justify-start gap-6 pt-2 text-center"
+          >
+            {[
+              { value: "6,800+", label: "Collectors" },
+              { value: "රු 385M+", label: "Transacted" },
+              { value: "18,400+", label: "Certified Lots" },
+            ].map(({ value, label }) => (
+              <div key={label} className="flex flex-col items-center lg:items-start">
+                <span className="text-xl font-extrabold font-mono text-[#f1d27a] leading-tight">
+                  {value}
                 </span>
-              </h1>
-              <p className="text-lg sm:text-xl text-zinc-300 max-w-2xl mx-auto lg:mx-0 font-light leading-relaxed">
-                The premier digital auction bourse for high-value numismatics, rare philatelic specimens, historical scrip, and antiquities. 100% escrow secured with verified chain of provenance.
-              </p>
-            </div>
-
-            {/* CTAs */}
-            <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 pt-2">
-              <a href="#featured">
-                <Button variant="gold" size="lg" className="w-full sm:w-auto text-sm uppercase tracking-wider px-8 shadow-xl shadow-amber-500/20 gap-2">
-                  <span>Explore Live Bidding</span>
-                  <ArrowRight className="h-4 w-4" />
-                </Button>
-              </a>
-              <Link href="/signup">
-                <Button variant="outline" size="lg" className="w-full sm:w-auto text-sm uppercase tracking-wider px-6 hover:bg-white/10">
-                  <Coins className="h-4 w-4 mr-2 text-amber-400" />
-                  Consign Rare Item
-                </Button>
-              </Link>
-            </div>
-
-            {/* Trust Assurances */}
-            <div className="pt-6 border-t border-white/10 grid grid-cols-3 gap-4 text-left max-w-lg mx-auto lg:mx-0">
-              <div className="space-y-1">
-                <div className="flex items-center gap-1.5 text-xs font-semibold text-white">
-                  <ShieldCheck className="h-4 w-4 text-amber-400" />
-                  <span>Triple Verified</span>
-                </div>
-                <p className="text-[11px] text-zinc-400 leading-tight">Spectral assay & lab certification</p>
-              </div>
-              <div className="space-y-1">
-                <div className="flex items-center gap-1.5 text-xs font-semibold text-white">
-                  <Lock className="h-4 w-4 text-emerald-400" />
-                  <span>Escrow Safe</span>
-                </div>
-                <p className="text-[11px] text-zinc-400 leading-tight">Funds held until in-hand approval</p>
-              </div>
-              <div className="space-y-1">
-                <div className="flex items-center gap-1.5 text-xs font-semibold text-white">
-                  <Award className="h-4 w-4 text-blue-400" />
-                  <span>Armored Transit</span>
-                </div>
-                <p className="text-[11px] text-zinc-400 leading-tight">100% insured specialized courier</p>
-              </div>
-            </div>
-
-          </div>
-
-          {/* Right Column: Interactive Hero Showcase Piece */}
-          <div className="lg:col-span-5 relative">
-            
-            {/* Glow Aura */}
-            <div className="absolute inset-0 bg-gradient-to-b from-amber-500/20 via-yellow-500/10 to-transparent rounded-3xl blur-2xl -z-10" />
-
-            {/* Showcase Card */}
-            <div className="relative rounded-3xl border border-amber-500/30 bg-zinc-950/80 p-6 backdrop-blur-2xl shadow-2xl shadow-black/80">
-              
-              {/* Header Badge */}
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2">
-                  <Badge variant="live" className="gap-1 px-3 py-1">
-                    <Flame className="h-3 w-3 text-red-400" />
-                    LIVE LOT #019
-                  </Badge>
-                  <Badge variant="pcgs">PCGS MS-67+</Badge>
-                </div>
-                <span className="text-xs text-zinc-400 flex items-center gap-1">
-                  <Clock className="h-3.5 w-3.5 text-amber-400" />
-                  <span>Ends in 28h 14m</span>
+                <span className="text-[11px] uppercase tracking-wider text-zinc-400 font-mono">
+                  {label}
                 </span>
               </div>
+            ))}
+          </motion.div>
+        </motion.div>
 
-              {/* Item Visual Frame */}
-              <div className="relative h-64 sm:h-72 w-full rounded-2xl overflow-hidden bg-gradient-to-b from-zinc-900 via-zinc-900/90 to-zinc-950 border border-white/10 flex items-center justify-center group">
-                <img
-                  src="https://images.unsplash.com/photo-1610375461246-83df859d849d?auto=format&fit=crop&w=800&q=80"
-                  alt="1907 Saint-Gaudens Double Eagle Gold Coin"
-                  className="h-full w-full object-cover object-center group-hover:scale-105 transition-transform duration-700 opacity-90"
-                />
-                
-                {/* Floating Grade Shield Overlay */}
-                <div className="absolute bottom-3 left-3 bg-zinc-950/90 border border-amber-500/40 rounded-xl px-3 py-1.5 backdrop-blur-md flex items-center gap-2 shadow-lg">
-                  <div className="h-2 w-2 rounded-full bg-emerald-400 animate-ping" />
-                  <span className="text-[11px] font-mono font-semibold text-amber-300">
-                    CERT #88429104
-                  </span>
-                </div>
+        {/* ---- RIGHT: Floating visual showcase ----------------------------- */}
+        <motion.div
+          className="relative hidden lg:flex items-center justify-center"
+          style={{ y: showcaseY }}
+          initial={shouldReduce ? {} : { opacity: 0 }}
+          animate={shouldReduce ? {} : { opacity: 1, transition: { duration: 0.5 } }}
+        >
+          {/* Central glowing orb */}
+          <div className="relative h-[380px] w-[380px]">
+            {/* Gold ambient orb */}
+            <div className="absolute inset-0 rounded-full bg-gradient-to-br from-[#c9a227]/25 via-[#f1d27a]/10 to-transparent blur-3xl" />
+            {/* Cyan auction halo */}
+            <div className="absolute inset-4 rounded-full border border-dashed border-cyan-400/20 animate-spin" style={{ animationDuration: "30s" }} />
+            {/* Inner gold ring */}
+            <div className="absolute inset-10 rounded-full border border-[#c9a227]/30" />
 
-                <div className="absolute top-3 right-3 bg-zinc-950/85 border border-white/10 rounded-lg px-2.5 py-1 backdrop-blur-sm text-[11px] text-zinc-300">
-                  Ex-Garrett Collection
-                </div>
-              </div>
-
-              {/* Item Title & Specs */}
-              <div className="mt-4 space-y-1">
-                <div className="text-xs font-mono text-amber-400 uppercase tracking-widest">
-                  Pre-1933 United States Gold
-                </div>
-                <h3 className="text-lg font-bold text-white font-serif">
-                  1907 Saint-Gaudens $20 High Relief Double Eagle
-                </h3>
-                <p className="text-xs text-zinc-400">
-                  Wire Rim Specimen. Flat Edge. Unbroken luster with glowing satiny cartwheel fields.
-                </p>
-              </div>
-
-              {/* Real-time Bid Widget */}
-              <div className="mt-5 p-4 rounded-xl bg-white/[0.03] border border-white/10 space-y-3">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <span className="text-[11px] uppercase tracking-wider text-zinc-400 block">
-                      Current High Bid
-                    </span>
-                    <span className="text-2xl font-bold font-mono text-amber-300">
-                      {formatCurrency(heroBid)}
-                    </span>
-                  </div>
-                  <div className="text-right">
-                    <span className="text-[11px] text-emerald-400 font-medium flex items-center justify-end gap-1">
-                      <CheckCircle2 className="h-3 w-3" /> Reserve Met
-                    </span>
-                    <span className="text-xs text-zinc-400">43 Verified Bids</span>
-                  </div>
-                </div>
-
-                {bidPlaced && (
-                  <div className="p-2 rounded-lg bg-emerald-950/80 border border-emerald-500/40 text-emerald-300 text-xs text-center font-medium animate-pulse">
-                    ✓ Bid successfully submitted to Escrow Ledger!
-                  </div>
-                )}
-
-                {/* Quick Bid Actions */}
-                <div className="grid grid-cols-2 gap-2 pt-1">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleQuickBid(5000)}
-                    className="text-xs hover:border-amber-400"
-                  >
-                    + $5,000 Increment
-                  </Button>
-                  <Button
-                    variant="gold"
-                    size="sm"
-                    onClick={() => handleQuickBid(10000)}
-                    className="text-xs font-semibold"
-                  >
-                    Bid {formatCurrency(heroBid + 10000)}
-                  </Button>
+            {/* Central coin placeholder */}
+            {shouldReduce ? (
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="h-32 w-32 rounded-full bg-gradient-to-br from-[#c9a227] to-[#f1d27a] flex items-center justify-center shadow-2xl shadow-[#c9a227]/40 border-4 border-[#f1d27a]/30">
+                  <span className="text-6xl">🪙</span>
                 </div>
               </div>
+            ) : (
+              <motion.div
+                className="absolute inset-0 flex items-center justify-center"
+                animate={{ rotate: [0, 5, -5, 0] }}
+                transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+              >
+                <motion.div
+                  className="h-36 w-36 rounded-full bg-gradient-to-br from-[#c9a227] via-[#e2be49] to-[#f1d27a] flex items-center justify-center border-4 border-[#f1d27a]/40"
+                  style={{
+                    boxShadow:
+                      "0 0 60px rgba(201,162,39,0.5), 0 0 120px rgba(201,162,39,0.25), inset 0 2px 4px rgba(255,255,255,0.3)",
+                  }}
+                  animate={{ scale: [1, 1.04, 1] }}
+                  transition={{ duration: 3.5, repeat: Infinity, ease: "easeInOut" }}
+                >
+                  <span className="text-7xl select-none">🪙</span>
+                </motion.div>
+              </motion.div>
+            )}
 
-              {/* Secondary Floating Mini Card: 1840 Penny Black preview */}
-              <div className="absolute -bottom-8 -left-6 hidden sm:flex items-center gap-3 p-3 rounded-2xl bg-[#0c0f17]/95 border border-amber-500/20 backdrop-blur-xl shadow-2xl shadow-black/80 max-w-xs">
-                <div className="h-12 w-12 rounded-xl bg-zinc-900 border border-white/10 overflow-hidden flex-shrink-0">
-                  <img
-                    src="https://images.unsplash.com/photo-1579783900882-c0d3dad7b119?auto=format&fit=crop&w=150&q=80"
-                    alt="1840 Penny Black"
-                    className="h-full w-full object-cover"
-                  />
-                </div>
-                <div>
-                  <span className="text-[10px] uppercase font-bold text-amber-400">Philately Highlight</span>
-                  <p className="text-xs font-semibold text-white truncate">1840 Penny Black Plate 1a</p>
-                  <p className="text-[11px] text-zinc-400">Bid: $68,500 • 29 Bids</p>
-                </div>
+            {/* Orbiting collectible cards */}
+            {COLLECTIBLES.map((item) => (
+              <div
+                key={item.id}
+                className="absolute"
+                style={{
+                  top: "50%",
+                  left: "50%",
+                  marginTop: item.offsetY,
+                  marginLeft: item.offsetX,
+                  transform: "translate(-50%, -50%)",
+                }}
+              >
+                <FloatCard item={item} shouldReduce={shouldReduce} />
               </div>
-
-            </div>
-
+            ))}
           </div>
+        </motion.div>
+      </div>
 
-        </div>
+      {/* -------------------------------------------------------------------- */}
+      {/* Scroll hint                                                           */}
+      {/* -------------------------------------------------------------------- */}
+      {!shouldReduce && (
+        <motion.div
+          className="absolute bottom-8 left-1/2 -translate-x-1/2 z-10 flex flex-col items-center gap-1.5 text-zinc-500"
+          initial={{ opacity: 0, y: -6 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 1.8, duration: 0.6 }}
+        >
+          <span className="text-[10px] uppercase tracking-widest font-mono">Scroll to explore</span>
+          <motion.div
+            animate={{ y: [0, 6, 0] }}
+            transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+          >
+            <ChevronDown className="h-5 w-5" />
+          </motion.div>
+        </motion.div>
+      )}
+
+      {/* -------------------------------------------------------------------- */}
+      {/* Trust indicators — whileInView, mobile-stacked, desktop row          */}
+      {/* -------------------------------------------------------------------- */}
+      <div className="absolute bottom-0 inset-x-0 z-10">
+        {/* Gradient fade into the trust bar */}
+        <div className="h-32 w-full bg-gradient-to-t from-[#0a0e17] via-[#0a0e17]/70 to-transparent pointer-events-none" />
+
+        <motion.div
+          className="bg-[#0a0e17]/95 border-t border-[rgba(201,162,39,0.2)] backdrop-blur-xl"
+          initial={shouldReduce ? {} : { opacity: 0, y: 24 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-60px" }}
+          transition={
+            shouldReduce
+              ? { duration: 0.2 }
+              : {
+                  duration: MOTION_TOKENS.duration.standard,
+                  ease: MOTION_TOKENS.ease.expoOut,
+                }
+          }
+        >
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5">
+            <motion.div
+              className="grid grid-cols-1 sm:grid-cols-3 gap-5 sm:gap-8 lg:gap-12"
+              variants={shouldReduce ? {} : staggerContainer}
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true, margin: "-40px" }}
+            >
+              {TRUST_ITEMS.map(({ icon: Icon, title, desc, color, glow, border }) => (
+                <motion.div
+                  key={title}
+                  variants={
+                    shouldReduce
+                      ? {}
+                      : {
+                          hidden: { opacity: 0, y: 16 },
+                          visible: {
+                            opacity: 1,
+                            y: 0,
+                            transition: {
+                              duration: MOTION_TOKENS.duration.standard,
+                              ease: MOTION_TOKENS.ease.expoOut,
+                            },
+                          },
+                        }
+                  }
+                  className={`flex items-start gap-3.5 p-4 rounded-2xl border ${border} bg-white/[0.025] ${glow} transition-all duration-300 hover:bg-white/[0.04]`}
+                >
+                  {/* Icon badge */}
+                  <div
+                    className={`mt-0.5 h-9 w-9 flex-shrink-0 rounded-xl flex items-center justify-center ${color} bg-white/5 border ${border}`}
+                  >
+                    <Icon className="h-5 w-5" aria-hidden="true" />
+                  </div>
+
+                  <div className="min-w-0">
+                    <p className={`text-sm font-bold font-serif ${color}`}>{title}</p>
+                    <p className="mt-0.5 text-[11px] text-zinc-400 leading-relaxed font-sans">
+                      {desc}
+                    </p>
+                  </div>
+                </motion.div>
+              ))}
+            </motion.div>
+          </div>
+        </motion.div>
       </div>
     </section>
   );

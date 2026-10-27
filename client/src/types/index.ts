@@ -1,55 +1,100 @@
+export type SriLankanEra = 
+  | "Anuradhapura & Polonnaruwa (377 BC – 1310 AD)"
+  | "Kotte & Kandy Kingdom (1412 – 1815 AD)"
+  | "Portuguese & Dutch Ceylon (1505 – 1796 AD)"
+  | "British Ceylon (1796 – 1948 AD)"
+  | "Dominion & Republic of Sri Lanka (1948 – Present)";
+
 export type CategorySlug = 
-  | "coins"
+  | "ancient-coins"
+  | "proof-commemoratives"
+  | "currency-notes"
   | "stamps"
-  | "banknotes"
-  | "antiquities"
-  | "comics"
-  | "watches";
+  | "medals";
 
 export interface Category {
   id: string;
   slug: CategorySlug;
   name: string;
+  sinhalaName: string;
   itemCount: number;
   description: string;
-  accentColor: string;
+  eraRange: string;
   icon: string;
   tag: string;
+  accentColor: string;
 }
 
-export type GradingService = "PCGS" | "NGC" | "PMG" | "CGC" | "PSA" | "ANACS";
+export type GradingService = "PCGS" | "NGC" | "PMG" | "SLNS" | "ANACS" | "Spink";
 
-export interface Seller {
+export interface User {
+  id: string;
   name: string;
-  handle: string;
+  username: string;
+  email: string;
   avatar: string;
+  role: "collector" | "verified_dealer" | "numismatic_expert" | "admin";
   rating: number;
   salesCount: number;
-  isVerifiedDealer: boolean;
+  isVerifiedCollector: boolean;
+  isKycVerified: boolean;
+  memberSince: string;
+  location: string;
+  badges: string[];
 }
 
-export interface CollectibleItem {
+export interface Bid {
+  id: string;
+  listingId: string;
+  bidderId: string;
+  bidderName: string;
+  bidderAvatar?: string;
+  amount: number; // In LKR
+  placedAt: string; // ISO date string
+  isWinning: boolean;
+  verifiedBid: boolean;
+}
+
+export interface Listing {
   id: string;
   title: string;
+  sinhalaTitle?: string;
   slug: string;
   category: CategorySlug;
+  era: SriLankanEra;
   year: number | string;
-  origin: string;
+  monarchOrAuthority: string; // e.g., "King Parakramabahu I", "Dutch East India Co. (VOC)", "King George VI", "CBSL"
+  denomination: string; // e.g., "1 Massa (Kahavanu)", "1 Stuiver Dump", "5 Rupees Crown", "1000 Rupees"
+  metalOrMaterial?: string; // e.g., "Gold-Plated Bronze", "0.925 Sterling Silver", "Copper Dump", "Watermarked Banknote Rag"
+  condition: string;
   gradingService?: GradingService;
-  grade?: string; // e.g., "MS-67+", "GEM UNC 68 EPQ", "VF 30"
+  grade?: string; // e.g., "PCGS MS-66", "Choice Very Fine 35", "PMG Choice UNC 64 EPQ"
   certificationNumber?: string;
-  currentBid: number;
-  buyNowPrice?: number;
+  startingBid: number; // In LKR
+  currentBid: number; // In LKR
+  buyNowPrice?: number; // In LKR
+  reservePrice?: number; // In LKR
   reserveMet: boolean;
   bidCount: number;
   endsAt: string; // ISO date string
   imageUrl: string;
   secondaryImages?: string[];
-  rarityLevel: "Historical" | "Extremely Rare" | "Museum Grade" | "Uncirculated" | "Unique Specimen";
+  rarityLevel: "High Heritage" | "Extremely Rare" | "Museum Grade" | "Uncirculated Proof" | "Commemorative Issue";
   provenance: string;
-  seller: Seller;
+  historicalContext: string;
+  seller: User;
+  bids?: Bid[];
+  isLive: boolean;
   isFeatured?: boolean;
   isHot?: boolean;
+}
+
+export interface MarketplaceStat {
+  label: string;
+  sinhalaLabel?: string;
+  value: string;
+  subtext: string;
+  trend?: string;
 }
 
 export interface Testimonial {
@@ -57,18 +102,12 @@ export interface Testimonial {
   quote: string;
   collectorName: string;
   role: string;
+  institution: string;
   location: string;
   avatar: string;
-  verifiedPiece: string;
+  verifiedAcquisition: string;
   rating: number;
   memberSince: string;
-}
-
-export interface MarketplaceStat {
-  label: string;
-  value: string;
-  subtext: string;
-  trend?: string;
 }
 
 export interface HowItWorksStep {

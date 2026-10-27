@@ -5,7 +5,23 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-export function formatCurrency(amount: number, currency: string = "USD"): string {
+/**
+ * Format currency in Sri Lankan Rupees (LKR / රු)
+ */
+export function formatLKR(amount: number, symbol: string = "රු"): string {
+  const formatted = new Intl.NumberFormat("en-LK", {
+    maximumFractionDigits: 0,
+  }).format(amount);
+  return `${symbol} ${formatted}`;
+}
+
+export function formatCurrency(
+  amount: number,
+  currency: string = "LKR"
+): string {
+  if (currency === "LKR") {
+    return formatLKR(amount);
+  }
   return new Intl.NumberFormat("en-US", {
     style: "currency",
     currency: currency,
@@ -14,7 +30,7 @@ export function formatCurrency(amount: number, currency: string = "USD"): string
 }
 
 export function formatNumber(num: number): string {
-  return new Intl.NumberFormat("en-US").format(num);
+  return new Intl.NumberFormat("en-LK").format(num);
 }
 
 export function getTimeRemaining(endsAt: string) {

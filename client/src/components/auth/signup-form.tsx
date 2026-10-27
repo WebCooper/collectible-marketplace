@@ -26,8 +26,8 @@ export function SignupForm() {
     email: "",
     password: "",
     confirmPassword: "",
-    collectorInterest: "coins",
-    agreeTerms: false as unknown as true,
+    collectorInterest: "ancient-coins",
+    agreeTerms: false,
   });
 
   const [errors, setErrors] = useState<{ [K in keyof SignupFormData]?: string }>({});
@@ -53,12 +53,12 @@ export function SignupForm() {
 
   const handleFillDemo = () => {
     setFormData({
-      fullName: "Sir Henry Cavendish",
-      username: "cavendish_numis",
-      email: "henry.cavendish@relicvault.com",
+      fullName: "Sir Henry De Mel",
+      username: "demel_numis",
+      email: "henry.demel@lankanumis.lk",
       password: "VaultPassword2026!",
       confirmPassword: "VaultPassword2026!",
-      collectorInterest: "coins",
+      collectorInterest: "ancient-coins",
       agreeTerms: true,
     });
     setErrors({});
@@ -71,7 +71,7 @@ export function SignupForm() {
     const result = signupSchema.safeParse(formData);
     if (!result.success) {
       const fieldErrors: { [K in keyof SignupFormData]?: string } = {};
-      result.error.errors.forEach((err) => {
+      result.error.issues.forEach((err) => {
         if (err.path[0]) {
           fieldErrors[err.path[0] as keyof SignupFormData] = err.message;
         }
@@ -90,31 +90,31 @@ export function SignupForm() {
   return (
     <div className="w-full space-y-6">
       <div className="space-y-2">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-amber-500/30 bg-amber-500/10 text-xs font-mono uppercase tracking-widest text-amber-300">
-          <Sparkles className="h-3.5 w-3.5 text-amber-400" />
-          <span>Charter Membership</span>
+        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-[rgba(201,162,39,0.3)] bg-[#101726] text-xs font-mono uppercase tracking-widest text-[#f1d27a]">
+          <Sparkles className="h-3.5 w-3.5 text-[#f1d27a]" />
+          <span>Charter Ceylon Collector</span>
         </div>
         <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-white font-serif">
           Create Collector Dossier
         </h2>
         <p className="text-xs sm:text-sm text-zinc-400">
-          Register to participate in live premier auctions, request consignments, and access insured custody.
+          Register to bid in live Colombo floor auctions, consign rare Ceylon items, and access vault custody.
         </p>
       </div>
 
       {signupSuccess ? (
-        <div className="p-8 rounded-2xl bg-emerald-950/80 border border-emerald-500/40 text-center space-y-4">
-          <div className="h-14 w-14 rounded-full bg-emerald-500/20 text-emerald-400 mx-auto flex items-center justify-center">
+        <div className="p-8 rounded-2xl bg-cyan-950/80 border border-cyan-400/50 text-center space-y-4">
+          <div className="h-14 w-14 rounded-full bg-cyan-500/20 text-cyan-400 mx-auto flex items-center justify-center">
             <CheckCircle2 className="h-8 w-8" />
           </div>
           <h3 className="text-xl font-bold text-white font-serif">Dossier Approved!</h3>
           <p className="text-xs text-zinc-300 leading-relaxed max-w-sm mx-auto">
-            Your credentials have been securely registered to the RelicVault registry. Welcome to our global fraternity of collectors.
+            Your credentials have been securely entered into the LankaNumis registry. Welcome to our global fraternity of Ceylon curators.
           </p>
           <div className="pt-2">
             <Link href="/">
-              <Button variant="gold" className="text-xs uppercase tracking-wider font-semibold">
-                Explore Live Auctions
+              <Button variant="gold" className="text-xs uppercase tracking-wider font-semibold font-mono">
+                Explore Live Lots
               </Button>
             </Link>
           </div>
@@ -126,9 +126,9 @@ export function SignupForm() {
             <button
               type="button"
               onClick={handleFillDemo}
-              className="text-[11px] text-amber-400/90 hover:text-amber-300 hover:underline flex items-center gap-1 font-mono"
+              className="text-[11px] text-[#f1d27a] hover:underline flex items-center gap-1 font-mono"
             >
-              ⚡ Auto-fill Collector Profile
+              ⚡ Auto-fill Sri Lankan Collector Profile
             </button>
           </div>
 
@@ -136,12 +136,12 @@ export function SignupForm() {
             {/* Full Name */}
             <div>
               <Label htmlFor="fullName" required>
-                Full Name
+                Full Legal Name
               </Label>
               <Input
                 id="fullName"
                 name="fullName"
-                placeholder="e.g. Sir Henry Cavendish"
+                placeholder="e.g. Sir Henry De Mel"
                 value={formData.fullName}
                 onChange={handleChange}
                 leftIcon={<User className="h-4 w-4" />}
@@ -157,7 +157,7 @@ export function SignupForm() {
               <Input
                 id="username"
                 name="username"
-                placeholder="cavendish_numis"
+                placeholder="demel_numis"
                 value={formData.username}
                 onChange={handleChange}
                 leftIcon={<AtSign className="h-4 w-4" />}
@@ -175,7 +175,7 @@ export function SignupForm() {
               id="email"
               name="email"
               type="email"
-              placeholder="name@collectorvault.com"
+              placeholder="henry.demel@lankanumis.lk"
               value={formData.email}
               onChange={handleChange}
               leftIcon={<Mail className="h-4 w-4" />}
@@ -183,24 +183,23 @@ export function SignupForm() {
             />
           </div>
 
-          {/* Collecting Discipline */}
+          {/* Collecting Discipline for Sri Lanka */}
           <div>
             <Label htmlFor="collectorInterest" required>
-              Primary Collecting Specialty
+              Primary Collecting Focus
             </Label>
             <select
               id="collectorInterest"
               name="collectorInterest"
               value={formData.collectorInterest}
               onChange={handleChange}
-              className="flex h-11 w-full rounded-xl border border-zinc-800 bg-zinc-950/60 px-4 py-2 text-sm text-zinc-100 transition-all focus-visible:outline-none focus-visible:border-amber-500/80 focus-visible:ring-2 focus-visible:ring-amber-500/20"
+              className="flex h-11 w-full rounded-xl border border-[rgba(201,162,39,0.2)] bg-[#0d1424] px-4 py-2 text-sm text-zinc-100 transition-all focus-visible:outline-none focus-visible:border-[#c9a227] focus-visible:ring-2 focus-visible:ring-[#c9a227]/20 font-sans"
             >
-              <option value="coins" className="bg-zinc-900">Rare Coins & Ancient Numismatics</option>
-              <option value="stamps" className="bg-zinc-900">Philately & Vintage Postage Stamps</option>
-              <option value="banknotes" className="bg-zinc-900">Historical Banknotes & Treasury Paper</option>
-              <option value="antiquities" className="bg-zinc-900">Antiquities, Seals & Classical Artifacts</option>
-              <option value="comics" className="bg-zinc-900">Graded Golden Age Comic Books</option>
-              <option value="watches" className="bg-zinc-900">Historic Horology & Timepieces</option>
+              <option value="ancient-coins" className="bg-[#0c121e]">Ancient Sri Lankan Coins (Kahavanu &amp; Massa)</option>
+              <option value="proof-commemoratives" className="bg-[#0c121e]">CBSL Proof Sets &amp; Commemorative Crowns</option>
+              <option value="currency-notes" className="bg-[#0c121e]">Historic Ceylon Currency Notes (George VI / QE II)</option>
+              <option value="stamps" className="bg-[#0c121e]">Ceylon Philately &amp; Chalon Head Stamps</option>
+              <option value="medals" className="bg-[#0c121e]">Sri Lankan Medals &amp; Militaria</option>
             </select>
           </div>
 
@@ -258,20 +257,20 @@ export function SignupForm() {
                 type="checkbox"
                 checked={formData.agreeTerms}
                 onChange={handleChange}
-                className="mt-1 h-4 w-4 rounded border-zinc-700 bg-zinc-900 text-amber-500 focus:ring-amber-400 cursor-pointer"
+                className="mt-1 h-4 w-4 rounded border-zinc-700 bg-zinc-900 text-[#c9a227] focus:ring-[#c9a227] cursor-pointer"
               />
               <label htmlFor="agreeTerms" className="text-xs text-zinc-400 cursor-pointer select-none leading-relaxed">
                 I agree to the{" "}
-                <a href="#" className="text-amber-400 hover:underline">
+                <a href="#" className="text-[#f1d27a] hover:underline">
                   Terms of Auction
                 </a>
                 ,{" "}
-                <a href="#" className="text-amber-400 hover:underline">
-                  Escrow Protocol
+                <a href="#" className="text-[#f1d27a] hover:underline">
+                  Commercial Escrow Protocol
                 </a>
                 , and{" "}
-                <a href="#" className="text-amber-400 hover:underline">
-                  Provenance Authenticity Guarantee
+                <a href="#" className="text-[#f1d27a] hover:underline">
+                  Antiquities Ordinance Provenance Declaration
                 </a>
                 .
               </label>
@@ -287,17 +286,17 @@ export function SignupForm() {
             variant="gold"
             size="lg"
             isLoading={isLoading}
-            className="w-full text-xs uppercase tracking-wider font-semibold gap-2 mt-4 shadow-lg shadow-amber-500/15"
+            className="w-full text-xs uppercase tracking-wider font-semibold gap-2 mt-4 shadow-lg shadow-[#c9a227]/20 font-mono"
           >
-            <span>Complete Registration & Issue Paddle</span>
+            <span>Register Dossier &amp; Issue Colombo Paddle</span>
             <ArrowRight className="h-4 w-4" />
           </Button>
 
           {/* Link to login */}
-          <div className="pt-4 text-center text-xs text-zinc-400">
+          <div className="pt-4 text-center text-xs text-zinc-400 font-mono">
             Already have an active collector account?{" "}
-            <Link href="/login" className="text-amber-400 font-semibold hover:underline">
-              Sign In to Vault
+            <Link href="/login" className="text-[#f1d27a] font-semibold hover:underline">
+              Sign In to Bourse
             </Link>
           </div>
         </form>

@@ -3,14 +3,16 @@ import { cn } from "@/lib/utils";
 
 const Card = React.forwardRef<
   HTMLDivElement,
-  React.HTMLAttributes<HTMLDivElement> & { hoverEffect?: boolean }
->(({ className, hoverEffect = false, ...props }, ref) => (
+  React.HTMLAttributes<HTMLDivElement> & { hoverEffect?: boolean; glow?: "gold" | "cyan" | "none" }
+>(({ className, hoverEffect = false, glow = "none", ...props }, ref) => (
   <div
     ref={ref}
     className={cn(
-      "rounded-2xl border border-white/10 bg-zinc-900/60 backdrop-blur-md text-zinc-100 shadow-xl transition-all duration-300",
+      "rounded-2xl border border-[rgba(201,162,39,0.2)] bg-[rgba(14,20,32,0.65)] backdrop-blur-xl text-zinc-100 shadow-2xl transition-all duration-300",
+      glow === "gold" && "border-[rgba(201,162,39,0.35)] shadow-[0_0_25px_rgba(201,162,39,0.1)]",
+      glow === "cyan" && "border-[rgba(34,211,238,0.35)] shadow-[0_0_25px_rgba(34,211,238,0.12)]",
       hoverEffect &&
-        "hover:border-amber-500/30 hover:bg-zinc-900/80 hover:shadow-amber-500/5 hover:-translate-y-1",
+        "hover:border-[rgba(201,162,39,0.45)] hover:bg-[rgba(14,20,32,0.85)] hover:shadow-[0_20px_40px_rgba(0,0,0,0.8),0_0_30px_rgba(201,162,39,0.12)] hover:-translate-y-1",
       className
     )}
     {...props}
@@ -37,7 +39,7 @@ const CardTitle = React.forwardRef<
   <h3
     ref={ref}
     className={cn(
-      "text-xl font-bold leading-tight tracking-tight text-white",
+      "text-xl font-bold leading-tight tracking-tight text-white font-serif",
       className
     )}
     {...props}
