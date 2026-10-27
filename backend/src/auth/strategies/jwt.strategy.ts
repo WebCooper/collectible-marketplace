@@ -4,6 +4,7 @@ import { PassportStrategy } from '@nestjs/passport';
 import { UserStatus } from '@prisma/client';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import type { Request } from 'express';
+import { jwtAccessSecret } from '../jwt-secrets';
 import { PrismaService } from '../../prisma/prisma.service';
 import { AuthenticatedUser } from '../../common/decorators/current-user.decorator';
 
@@ -12,6 +13,19 @@ export interface JwtTokenPayload {
   sub: string;
   email: string;
   role: AuthenticatedUser['role'];
+  /// Issued-at, in seconds; added by the JWT library when signing.
+  iat?: number;
+}
+
+/// A token minted before the password last changed must stop working, so a
+/// stolen session does not survive a password reset. Compared in whole seconds
+/// because `iat` has no finer resolution.
+export function issuedBeforePasswordChange(
+  iat: number | undefined,
+  passwordChangedAt: Date | null,
+) {
+  if (!passwordChangedAt) return false;
+  return (iat ?? 0) < Math.floor(passwordChangedAt.getTime() / 1000);
 }
 
 @Injectable()
@@ -31,8 +45,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
         ExtractJwt.fromAuthHeaderAsBearerToken(),
       ]),
       ignoreExpiration: false,
-      secretOrKey:
-        config.get<string>('JWT_SECRET') ?? 'change-me-in-production',
+      secretOrKey: jwtAccessSecret(config),
     });
   }
 
@@ -42,7 +55,13 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   async validate(payload: JwtTokenPayload): Promise<AuthenticatedUser> {
     const user = await this.prisma.user.findUnique({
       where: { id: payload.sub },
-      select: { id: true, email: true, role: true, status: true },
+      select: {
+        id: true,
+        email: true,
+        role: true,
+        status: true,
+        passwordChangedAt: true,
+      },
     });
 
     if (!user) {
@@ -50,6 +69,10 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     }
     if (user.status === UserStatus.SUSPENDED) {
       throw new UnauthorizedException('Account is suspended');
+    }
+
+    if (issuedBeforePasswordChange(payload.iat, user.passwordChangedAt)) {
+      throw new UnauthorizedException('Session expired, please sign in again');
     }
 
     return { id: user.id, email: user.email, role: user.role };

@@ -107,6 +107,15 @@ export class ResolveReportDto {
   resolutionNote: string;
 }
 
+/// What a resolved dispute does to the order. NONE only records the outcome.
+export enum DisputeOrderAction {
+  NONE = 'NONE',
+  /// The buyer wins: the order is cancelled and its payment marked refunded.
+  REFUND_BUYER = 'REFUND_BUYER',
+  /// The seller wins: the order is closed as completed.
+  COMPLETE_ORDER = 'COMPLETE_ORDER',
+}
+
 export class ResolveDisputeDto {
   @ApiProperty({ enum: [DisputeStatus.RESOLVED, DisputeStatus.REJECTED] })
   @IsEnum(DisputeStatus)
@@ -119,6 +128,16 @@ export class ResolveDisputeDto {
   @MinLength(5)
   @MaxLength(1000)
   resolution: string;
+
+  @ApiPropertyOptional({
+    enum: DisputeOrderAction,
+    default: DisputeOrderAction.NONE,
+    description:
+      'Applied to the order only when the dispute is RESOLVED. REFUND_BUYER marks the payment refunded in our records; the money itself is returned through the payment provider.',
+  })
+  @IsOptional()
+  @IsEnum(DisputeOrderAction)
+  orderAction?: DisputeOrderAction;
 }
 
 export class ListReportsDto extends PaginationDto {

@@ -158,6 +158,8 @@ model User {
   email         String     @unique
   phone         String?
   passwordHash  String
+  /// Sessions issued before this moment are rejected (set on password change/reset).
+  passwordChangedAt DateTime?
   role          Role       @default(BUYER)
   status        UserStatus @default(PENDING_VERIFICATION)
   emailVerified Boolean    @default(false)

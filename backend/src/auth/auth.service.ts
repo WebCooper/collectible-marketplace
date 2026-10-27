@@ -28,6 +28,8 @@ import {
   SELF_REGISTERABLE_ROLES,
   VerifyOtpDto,
 } from './dto/auth.dto';
+import { jwtRefreshSecret } from './jwt-secrets';
+import { issuedBeforePasswordChange } from './strategies/jwt.strategy';
 import type { JwtTokenPayload } from './strategies/jwt.strategy';
 
 @Injectable()
@@ -198,7 +200,7 @@ export class AuthService {
     let payload: JwtTokenPayload;
     try {
       payload = await this.jwt.verifyAsync<JwtTokenPayload>(refreshToken, {
-        secret: this.config.get<string>('JWT_REFRESH_SECRET'),
+        secret: jwtRefreshSecret(this.config),
       });
     } catch {
       throw new UnauthorizedException('Invalid refresh token');
@@ -209,6 +211,9 @@ export class AuthService {
     });
     if (!user || user.status !== UserStatus.ACTIVE) {
       throw new UnauthorizedException('Account is not active');
+    }
+    if (issuedBeforePasswordChange(payload.iat, user.passwordChangedAt)) {
+      throw new UnauthorizedException('Session expired, please sign in again');
     }
     return this.issueSession(user);
   }
@@ -272,7 +277,10 @@ export class AuthService {
     await this.prisma.$transaction([
       this.prisma.user.update({
         where: { id: token.userId },
-        data: { passwordHash: await this.hashPassword(dto.password) },
+        data: {
+          passwordHash: await this.hashPassword(dto.password),
+          passwordChangedAt: new Date(),
+        },
       }),
       this.prisma.authToken.update({
         where: { id: token.id },
@@ -315,7 +323,7 @@ export class AuthService {
     const [accessToken, refreshToken] = await Promise.all([
       this.jwt.signAsync(payload),
       this.jwt.signAsync(payload, {
-        secret: this.config.get<string>('JWT_REFRESH_SECRET'),
+        secret: jwtRefreshSecret(this.config),
         expiresIn: (this.config.get<string>('JWT_REFRESH_EXPIRES_IN') ??
           '7d') as JwtSignOptions['expiresIn'],
       }),

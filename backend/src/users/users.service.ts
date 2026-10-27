@@ -110,7 +110,11 @@ export class UsersService {
     const rounds = Number(this.config.get('BCRYPT_SALT_ROUNDS') ?? 10);
     await this.prisma.user.update({
       where: { id: userId },
-      data: { passwordHash: await bcrypt.hash(dto.newPassword, rounds) },
+      data: {
+        passwordHash: await bcrypt.hash(dto.newPassword, rounds),
+        // Signs out every other session; the caller signs in again.
+        passwordChangedAt: new Date(),
+      },
     });
 
     return { message: 'Password updated' };

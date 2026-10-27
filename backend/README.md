@@ -35,8 +35,21 @@ as `Authorization: Bearer <token>` or in an `access_token` cookie — the strate
 accepts both, so the admin panel can use a header and the client an httpOnly
 cookie.
 
-`POST /auth/login` returns `{ accessToken, refreshToken, user }`. Access tokens
-expire in 15 minutes; exchange the refresh token at `POST /auth/refresh`.
+`POST /auth/login` (and `verify-otp` / `refresh`) returns
+`{ accessToken, refreshToken, user }` **and** sets two httpOnly cookies:
+`access_token` (path `/`) and `refresh_token` (path `/auth`, `Secure` in
+production). Browser clients should call the API with `credentials: 'include'`
+and never touch the tokens. Access tokens expire in 15 minutes; call
+`POST /auth/refresh` with an empty body to renew from the cookie (the admin
+panel can send `{ refreshToken }` instead). `POST /auth/logout` clears both
+cookies.
+
+Changing or resetting a password signs out every other session: tokens issued
+before `User.passwordChangedAt` are rejected.
+
+With `NODE_ENV=production` the API refuses to start unless `JWT_SECRET` and
+`JWT_REFRESH_SECRET` are unique values of at least 32 characters (the
+`.env.example` placeholders are rejected).
 
 A newly registered account is `PENDING_VERIFICATION` and cannot sign in until it
 confirms the 6-digit code sent to its e-mail. In development the code is written
@@ -132,7 +145,14 @@ provider in `src/orders/orders.module.ts`:
 `verifyCallback` must verify the provider's signature and return `null` when it
 fails — an unverified callback would let anyone mark an order as paid. The order
 module already makes the update idempotent on `transactionRef`, so a provider
-retrying a callback cannot double-charge a buyer.
+retrying a callback cannot double-charge a buyer. When the callback carries an
+amount it must equal the order amount, and a failed payment cancels the order
+(a fixed-price item goes back on sale; the buyer checks out again).
+
+Resolving a dispute (`PATCH /admin/disputes/:id/resolve`) accepts an optional
+`orderAction`: `REFUND_BUYER` cancels the order and marks its payment refunded
+in our records (the provider refund itself is Member 4's gateway), and
+`COMPLETE_ORDER` closes it in the seller's favour.
 
 **E-mail and SMS** — implement `NotificationTransport`
 (`src/notifications/notification-dispatcher.ts`) and swap the transports in

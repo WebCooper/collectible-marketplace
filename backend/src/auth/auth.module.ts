@@ -5,6 +5,7 @@ import type { JwtSignOptions } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
+import { jwtAccessSecret } from './jwt-secrets';
 import { JwtStrategy } from './strategies/jwt.strategy';
 
 @Module({
@@ -14,7 +15,7 @@ import { JwtStrategy } from './strategies/jwt.strategy';
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: (config: ConfigService) => ({
-        secret: config.get<string>('JWT_SECRET') ?? 'change-me-in-production',
+        secret: jwtAccessSecret(config),
         signOptions: {
           // `ms`-style duration string; cast because the config value is a
           // plain string at compile time.

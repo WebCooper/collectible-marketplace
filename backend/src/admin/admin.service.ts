@@ -10,6 +10,7 @@ import {
   NotificationChannel,
   NotificationType,
   OrderStatus,
+  PaymentStatus,
   Prisma,
   ReportStatus,
   ReportTargetType,
@@ -22,6 +23,7 @@ import { paginate } from '../common/dto/pagination.dto';
 import type { AuthenticatedUser } from '../common/decorators/current-user.decorator';
 import {
   CreateReportDto,
+  DisputeOrderAction,
   ListDisputesDto,
   ListReportsDto,
   ListUsersDto,
@@ -384,7 +386,15 @@ export class AdminService {
     const dispute = await this.prisma.dispute.findUnique({
       where: { id: disputeId },
       include: {
-        order: { select: { buyerId: true, sellerId: true, id: true } },
+        order: {
+          select: {
+            buyerId: true,
+            sellerId: true,
+            id: true,
+            status: true,
+            payment: { select: { id: true, status: true } },
+          },
+        },
       },
     });
     if (!dispute) throw new NotFoundException('Dispute not found');
@@ -394,6 +404,12 @@ export class AdminService {
     ) {
       throw new ConflictException('This dispute has already been closed');
     }
+
+    const action =
+      dto.status === DisputeStatus.RESOLVED
+        ? (dto.orderAction ?? DisputeOrderAction.NONE)
+        : DisputeOrderAction.NONE;
+    const orderOps = this.orderOperationsFor(action, dispute.order);
 
     const [updated] = await this.prisma.$transaction([
       this.prisma.dispute.update({
@@ -411,9 +427,10 @@ export class AdminService {
           action: `DISPUTE_${dto.status}`,
           entityType: 'Dispute',
           entityId: disputeId,
-          metadata: { resolution: dto.resolution },
+          metadata: { resolution: dto.resolution, orderAction: action },
         },
       }),
+      ...orderOps,
     ]);
 
     // Both parties hear the outcome, not just the person who raised it.
@@ -429,6 +446,53 @@ export class AdminService {
     );
 
     return updated;
+  }
+
+  /// Order and payment changes that go with a dispute outcome. These bypass the
+  /// normal order transitions on purpose: an administrator's ruling can end an
+  /// order from any state, which neither party could do themselves.
+  private orderOperationsFor(
+    action: DisputeOrderAction,
+    order: {
+      id: string;
+      status: OrderStatus;
+      payment: { id: string; status: PaymentStatus } | null;
+    },
+  ) {
+    if (action === DisputeOrderAction.NONE) return [];
+
+    if (
+      order.status === OrderStatus.CANCELLED ||
+      order.status === OrderStatus.COMPLETED
+    ) {
+      throw new BadRequestException(
+        `The order is already ${order.status.toLowerCase()}, so it cannot be changed`,
+      );
+    }
+
+    if (action === DisputeOrderAction.COMPLETE_ORDER) {
+      return [
+        this.prisma.order.update({
+          where: { id: order.id },
+          data: { status: OrderStatus.COMPLETED },
+        }),
+      ];
+    }
+
+    return [
+      this.prisma.order.update({
+        where: { id: order.id },
+        data: { status: OrderStatus.CANCELLED },
+      }),
+      ...(order.payment?.status === PaymentStatus.SUCCEEDED
+        ? [
+            this.prisma.payment.update({
+              where: { id: order.payment.id },
+              data: { status: PaymentStatus.REFUNDED },
+            }),
+          ]
+        : []),
+    ];
   }
 
   // --- Analytics & reporting ----------------------------------------------

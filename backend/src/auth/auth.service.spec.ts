@@ -29,6 +29,7 @@ describe('AuthService', () => {
     $transaction: jest.Mock;
   };
   let notifications: { notify: jest.Mock };
+  let jwt: { signAsync: jest.Mock; verifyAsync: jest.Mock };
 
   const activeUser = {
     id: 'user-1',
@@ -63,6 +64,10 @@ describe('AuthService', () => {
       $transaction: jest.fn().mockResolvedValue([{}, activeUser]),
     };
     notifications = { notify: jest.fn().mockResolvedValue({}) };
+    jwt = {
+      signAsync: jest.fn().mockResolvedValue('signed.jwt.token'),
+      verifyAsync: jest.fn(),
+    };
 
     const moduleRef = await Test.createTestingModule({
       providers: [
@@ -71,9 +76,7 @@ describe('AuthService', () => {
         { provide: NotificationsService, useValue: notifications },
         {
           provide: JwtService,
-          useValue: {
-            signAsync: jest.fn().mockResolvedValue('signed.jwt.token'),
-          },
+          useValue: jwt,
         },
         {
           provide: ConfigService,
@@ -310,5 +313,54 @@ describe('AuthService', () => {
       expect(result.message).toContain('Password updated');
       expect(prisma.$transaction).toHaveBeenCalled();
     });
+  });
+
+  describe('refresh', () => {
+    const nowSeconds = Math.floor(Date.now() / 1000);
+
+    it('refuses a refresh token issued before the password changed', async () => {
+      jwt.verifyAsync.mockResolvedValue({
+        sub: activeUser.id,
+        iat: nowSeconds - 3600,
+      });
+      prisma.user.findUnique.mockResolvedValue({
+        ...activeUser,
+        passwordChangedAt: new Date(),
+      });
+
+      await expect(service.refresh('old-refresh')).rejects.toBeInstanceOf(
+        UnauthorizedException,
+      );
+    });
+
+    it('accepts a refresh token issued after the password changed', async () => {
+      jwt.verifyAsync.mockResolvedValue({
+        sub: activeUser.id,
+        iat: nowSeconds,
+      });
+      prisma.user.findUnique.mockResolvedValue({
+        ...activeUser,
+        passwordChangedAt: new Date(Date.now() - 3600_000),
+      });
+
+      await expect(service.refresh('fresh-refresh')).resolves.toHaveProperty(
+        'accessToken',
+      );
+    });
+  });
+
+  it('stamps passwordChangedAt when a password is reset', async () => {
+    prisma.authToken.findFirst.mockResolvedValue({
+      id: 'token-1',
+      userId: activeUser.id,
+    });
+
+    await service.resetPassword({ token: 't', password: 'NewPassword123!' });
+
+    expect(prisma.user.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ passwordChangedAt: expect.any(Date) }),
+      }),
+    );
   });
 });
