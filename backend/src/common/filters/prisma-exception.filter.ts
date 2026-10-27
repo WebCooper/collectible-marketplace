@@ -29,6 +29,12 @@ export class PrismaExceptionFilter implements ExceptionFilter {
             : 'Duplicate record',
         });
       }
+      case 'P2034':
+        // A serializable transaction lost a race and exhausted its retries.
+        return response.status(HttpStatus.CONFLICT).json({
+          statusCode: HttpStatus.CONFLICT,
+          message: 'This item was just updated by someone else. Please retry.',
+        });
       case 'P2025':
         return response.status(HttpStatus.NOT_FOUND).json({
           statusCode: HttpStatus.NOT_FOUND,

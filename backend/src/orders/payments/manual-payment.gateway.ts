@@ -46,7 +46,7 @@ export class ManualPaymentGateway implements PaymentGateway {
     return {
       transactionRef,
       succeeded: payload.status !== 'failed',
-      amount: Number(payload.amount ?? 0),
+      amount: payload.amount === undefined ? null : Number(payload.amount),
       rawPayload: payload,
     };
   }

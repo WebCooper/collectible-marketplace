@@ -20,7 +20,9 @@ export interface PaymentIntent {
 export interface PaymentCallback {
   transactionRef: string;
   succeeded: boolean;
-  amount: number;
+  /// Amount the provider says it collected, or null if the callback does not
+  /// carry one. When present it is checked against the order amount.
+  amount: number | null;
   rawPayload: Record<string, unknown>;
 }
 

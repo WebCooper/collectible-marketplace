@@ -121,7 +121,9 @@ export class AuctionsService {
           const auction = await tx.auction.findUnique({
             where: { id: auctionId },
             include: {
-              listing: { select: { id: true, title: true, sellerId: true } },
+              listing: {
+                select: { id: true, title: true, sellerId: true, status: true },
+              },
               bids: {
                 where: { status: BidStatus.ACTIVE },
                 orderBy: { amount: 'desc' },
@@ -135,6 +137,14 @@ export class AuctionsService {
           if (auction.listing.sellerId === user.id) {
             throw new ForbiddenException(
               'A seller cannot bid on their own item',
+            );
+          }
+
+          // An auction is only biddable while its listing is live: one still
+          // under review, removed by a moderator or withdrawn must not take bids.
+          if (auction.listing.status !== ListingStatus.ACTIVE) {
+            throw new BadRequestException(
+              'This listing is not open for bidding',
             );
           }
 
@@ -258,11 +268,18 @@ export class AuctionsService {
           const auction = await tx.auction.findUnique({
             where: { id: auctionId },
             include: {
-              listing: { select: { id: true, title: true, sellerId: true } },
+              listing: {
+                select: { id: true, title: true, sellerId: true, status: true },
+              },
             },
           });
 
           if (!auction) throw new NotFoundException('Auction not found');
+          if (auction.listing.status !== ListingStatus.ACTIVE) {
+            throw new BadRequestException(
+              'This listing is not open for bidding',
+            );
+          }
           if (!auction.buyNowPrice) {
             throw new BadRequestException(
               'This auction does not offer a Buy Now price',
@@ -271,7 +288,10 @@ export class AuctionsService {
           if (auction.listing.sellerId === user.id) {
             throw new ForbiddenException('A seller cannot buy their own item');
           }
-          if (auction.status !== AuctionStatus.ACTIVE) {
+          if (
+            auction.status !== AuctionStatus.ACTIVE ||
+            auction.endTime <= new Date()
+          ) {
             throw new BadRequestException('This auction is not open');
           }
           if (auction.currentPrice.greaterThanOrEqualTo(auction.buyNowPrice)) {

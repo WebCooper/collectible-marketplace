@@ -38,7 +38,12 @@ function auctionFixture(overrides: Record<string, unknown> = {}) {
     status: AuctionStatus.ACTIVE,
     bidCount: 0,
     extensionCount: 0,
-    listing: { id: 'listing-1', title: 'Ceylon 5 Rupee', sellerId: 'seller-1' },
+    listing: {
+      id: 'listing-1',
+      title: 'Ceylon 5 Rupee',
+      sellerId: 'seller-1',
+      status: ListingStatus.ACTIVE,
+    },
     bids: [] as { id: string; bidderId: string; amount: Prisma.Decimal }[],
     ...overrides,
   };
@@ -268,6 +273,28 @@ describe('AuctionsService', () => {
       );
     });
 
+    it.each([
+      ListingStatus.UNDER_REVIEW,
+      ListingStatus.REMOVED,
+      ListingStatus.WITHDRAWN,
+    ])('rejects a bid while the listing is %s', async (status) => {
+      tx.auction.findUnique.mockResolvedValue(
+        auctionFixture({
+          listing: {
+            id: 'listing-1',
+            title: 'x',
+            sellerId: 'seller-1',
+            status,
+          },
+        }),
+      );
+
+      await expect(
+        service.placeBid(bidder, 'auction-1', { amount: 10000 }),
+      ).rejects.toThrow(BadRequestException);
+      expect(tx.bid.create).not.toHaveBeenCalled();
+    });
+
     it('reports a missing auction rather than failing silently', async () => {
       tx.auction.findUnique.mockResolvedValue(null);
 
@@ -311,6 +338,33 @@ describe('AuctionsService', () => {
 
       await expect(service.buyNow(bidder, 'auction-1')).rejects.toThrow(
         'Bidding has already passed the Buy Now price',
+      );
+    });
+
+    it('refuses Buy Now while the listing is not live', async () => {
+      tx.auction.findUnique.mockResolvedValue(
+        auctionFixture({
+          listing: {
+            id: 'listing-1',
+            title: 'x',
+            sellerId: 'seller-1',
+            status: ListingStatus.REMOVED,
+          },
+        }),
+      );
+
+      await expect(service.buyNow(bidder, 'auction-1')).rejects.toThrow(
+        BadRequestException,
+      );
+    });
+
+    it('refuses Buy Now after the closing time has passed', async () => {
+      tx.auction.findUnique.mockResolvedValue(
+        auctionFixture({ endTime: new Date(Date.now() - 1000) }),
+      );
+
+      await expect(service.buyNow(bidder, 'auction-1')).rejects.toThrow(
+        BadRequestException,
       );
     });
 

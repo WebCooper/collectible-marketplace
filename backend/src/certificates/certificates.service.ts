@@ -145,6 +145,14 @@ export class CertificatesService {
     });
     if (!listing) throw new NotFoundException('Listing not found');
 
+    // Only listings waiting in the review queue can be decided. Without this an
+    // approval could republish a sold, withdrawn or moderator-removed listing.
+    if (listing.status !== ListingStatus.UNDER_REVIEW) {
+      throw new BadRequestException(
+        'Only a listing under review can receive a verification decision',
+      );
+    }
+
     if (dto.certificateId) {
       const certificate = await this.prisma.certificate.findFirst({
         where: { id: dto.certificateId, listingId },

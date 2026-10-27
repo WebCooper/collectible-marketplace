@@ -69,38 +69,40 @@ export class OrdersService {
       );
     }
 
-    const order = await this.prisma.$transaction(
-      async (tx) => {
-        const source = dto.auctionId
-          ? await this.resolveAuctionCheckout(tx, user, dto.auctionId)
-          : await this.resolveFixedPriceCheckout(tx, user, dto.listingId!);
+    const order = await this.retryOnWriteConflict(() =>
+      this.prisma.$transaction(
+        async (tx) => {
+          const source = dto.auctionId
+            ? await this.resolveAuctionCheckout(tx, user, dto.auctionId)
+            : await this.resolveFixedPriceCheckout(tx, user, dto.listingId!);
 
-        const created = await tx.order.create({
-          data: {
-            listingId: source.listingId,
-            auctionId: dto.auctionId,
-            buyerId: user.id,
-            sellerId: source.sellerId,
-            amount: source.amount,
-            status: OrderStatus.PENDING,
-            shippingName: dto.shippingName,
-            shippingPhone: dto.shippingPhone,
-            shippingAddress: dto.shippingAddress,
-            shippingCity: dto.shippingCity,
-            shippingPostalCode: dto.shippingPostalCode,
-          },
-        });
+          const created = await tx.order.create({
+            data: {
+              listingId: source.listingId,
+              auctionId: dto.auctionId,
+              buyerId: user.id,
+              sellerId: source.sellerId,
+              amount: source.amount,
+              status: OrderStatus.PENDING,
+              shippingName: dto.shippingName,
+              shippingPhone: dto.shippingPhone,
+              shippingAddress: dto.shippingAddress,
+              shippingCity: dto.shippingCity,
+              shippingPostalCode: dto.shippingPostalCode,
+            },
+          });
 
-        // Taking the listing off the market inside the same transaction is what
-        // stops a second buyer checking out the same item.
-        await tx.listing.update({
-          where: { id: source.listingId },
-          data: { status: ListingStatus.SOLD },
-        });
+          // Taking the listing off the market inside the same transaction is what
+          // stops a second buyer checking out the same item.
+          await tx.listing.update({
+            where: { id: source.listingId },
+            data: { status: ListingStatus.SOLD },
+          });
 
-        return { ...created, listingTitle: source.listingTitle };
-      },
-      { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
+          return { ...created, listingTitle: source.listingTitle };
+        },
+        { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
+      ),
     );
 
     const payment = await this.startPayment(order.id, order.amount, user.email);
@@ -115,6 +117,25 @@ export class OrdersService {
     );
 
     return { order, payment };
+  }
+
+  /// Two buyers racing for the same item make Postgres abort one serializable
+  /// transaction (Prisma P2034). Re-running it lets the loser be re-validated
+  /// against the winner's order and get a clear "no longer available" answer
+  /// rather than a server error.
+  private async retryOnWriteConflict<T>(operation: () => Promise<T>) {
+    const maxAttempts = 3;
+    for (let attempt = 1; ; attempt++) {
+      try {
+        return await operation();
+      } catch (error) {
+        const conflict =
+          error instanceof Prisma.PrismaClientKnownRequestError &&
+          error.code === 'P2034';
+        if (!conflict || attempt >= maxAttempts) throw error;
+        await new Promise((resolve) => setTimeout(resolve, 25 * attempt));
+      }
+    }
   }
 
   private async resolveAuctionCheckout(
@@ -245,6 +266,19 @@ export class OrdersService {
 
     const succeeded = callback.succeeded;
 
+    // A callback that claims success for a different sum than the order is a
+    // tampered or mismatched payment; it must never mark the order as paid.
+    if (
+      succeeded &&
+      callback.amount !== null &&
+      !payment.amount.equals(new Prisma.Decimal(callback.amount))
+    ) {
+      this.logger.warn(
+        `Payment ${callback.transactionRef} amount ${callback.amount} does not match order amount ${payment.amount.toString()}`,
+      );
+      throw new BadRequestException('Payment amount does not match the order');
+    }
+
     await this.prisma.$transaction([
       this.prisma.payment.update({
         where: { id: payment.id },
@@ -255,8 +289,20 @@ export class OrdersService {
       }),
       this.prisma.order.update({
         where: { id: payment.orderId },
-        data: { status: succeeded ? OrderStatus.PAID : OrderStatus.PENDING },
+        // A failed payment cancels the order so the item is not stuck on a
+        // sale that can never complete; the buyer can check out again.
+        data: {
+          status: succeeded ? OrderStatus.PAID : OrderStatus.CANCELLED,
+        },
       }),
+      ...(succeeded || payment.order.auctionId
+        ? []
+        : [
+            this.prisma.listing.update({
+              where: { id: payment.order.listingId },
+              data: { status: ListingStatus.ACTIVE },
+            }),
+          ]),
       this.prisma.auditLog.create({
         data: {
           action: succeeded ? 'PAYMENT_SUCCEEDED' : 'PAYMENT_FAILED',
@@ -412,8 +458,10 @@ export class OrdersService {
       );
     }
 
-    if (dto.status === OrderStatus.CANCELLED) {
-      // A cancelled order releases the item back onto the marketplace.
+    if (dto.status === OrderStatus.CANCELLED && !order.auctionId) {
+      // A cancelled fixed-price order releases the item back onto the
+      // marketplace. An auction item stays sold: its auction has ended, so
+      // there is nothing to relist it into.
       await this.prisma.listing.update({
         where: { id: order.listingId },
         data: { status: ListingStatus.ACTIVE },

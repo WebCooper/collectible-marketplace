@@ -98,7 +98,9 @@ export class ResetPasswordDto {
 }
 
 export class RefreshTokenDto {
-  @ApiProperty()
+  /// Optional: browser clients send the refresh token as an httpOnly cookie.
+  @ApiPropertyOptional()
+  @IsOptional()
   @IsString()
-  refreshToken: string;
+  refreshToken?: string;
 }
