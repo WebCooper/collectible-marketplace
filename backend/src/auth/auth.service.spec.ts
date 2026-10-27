@@ -121,7 +121,9 @@ describe('AuthService', () => {
         password: 'Password123!',
       });
 
-      const { passwordHash } = prisma.user.create.mock.calls[0][0].data;
+      const { passwordHash } = (
+        prisma.user.create.mock.calls[0] as [{ data: { passwordHash: string } }]
+      )[0].data;
       expect(passwordHash).not.toBe('Password123!');
       expect(bcrypt.compareSync('Password123!', passwordHash)).toBe(true);
     });
