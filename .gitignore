@@ -1,0 +1,4 @@
+*.md
+report/
+!MEMBER1_PLAN.md
+!admin/README.md
