@@ -1,36 +1,57 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# CeylonCollect — client
 
-## Getting Started
+Buyer and seller web app for the Sri Lankan Collectible Marketplace. Built with Next.js 16
+(App Router), React 19 and Tailwind CSS 4. The pages talk to the NestJS API described in
+[`backend/docs/API.md`](../backend/docs/API.md) and `backend/docs/openapi.json`.
 
-First, run the development server:
+## Running it
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+cp .env.example .env.local   # NEXT_PUBLIC_API_URL, defaults to http://localhost:3001
+npm install
+npm run dev                  # http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+The API must allow `http://localhost:3000` in `CORS_ORIGINS`. That is its default.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## How it works
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- **Session**: the API sets httpOnly `access_token` / `refresh_token` cookies, and every call
+  sends `credentials: 'include'`. A `401` triggers one shared `POST /auth/refresh` and a retry.
+  If that fails, the user is signed out. Tokens are never stored in browser storage.
+- **API layer**: all endpoints are in [`lib/api.ts`](lib/api.ts), with types in
+  [`lib/types.ts`](lib/types.ts).
+- **Live bidding**: [`lib/socket.ts`](lib/socket.ts) connects to the `/auctions` Socket.IO
+  namespace. [`AuctionPanel`](components/AuctionPanel.tsx) subscribes and handles
+  `auction:bid`, `auction:extended` and `auction:closed`, and re-syncs over REST on every
+  reconnect.
 
-## Learn More
+## Pages
 
-To learn more about Next.js, take a look at the following resources:
+| Route | What it does | Endpoints |
+| --- | --- | --- |
+| `/` | Hero, category counts, auctions ending soon, featured items | `GET /listings/featured`, `/listings/categories`, `/listings` |
+| `/listings` | Search, filters, sorting, pagination | `GET /listings` |
+| `/listings/[id]` | Gallery, details, certificates, review history, buy or bid live, report | `GET /listings/:id`, `/auctions/:id`, `/auctions/:id/bids`, `POST /auctions/:id/bids`, `/auctions/:id/buy-now`, `/reports` |
+| `/checkout` | Shipping form, order, payment handoff | `POST /orders/checkout` |
+| `/orders`, `/orders/[id]` | Purchases and sales, progress, ship, confirm receipt, dispute | `GET /orders`, `/orders/sales`, `/orders/:id`, `PATCH /orders/:id/status`, `POST /orders/:id/disputes` |
+| `/bids` | Every auction the user has bid on | `GET /bids/mine` |
+| `/notifications` | Notification centre with deep links (unread badge in the header) | `GET /notifications`, `/notifications/unread-count`, `PATCH …/read`, `…/read-all` |
+| `/account` | Profile and password change | `GET/PATCH /users/me`, `PATCH /users/me/password` |
+| `/users/[id]` | Public seller profile and listings, report user | `GET /users/:id`, `GET /listings?sellerId=` |
+| `/sell` | Seller dashboard | `GET /listings/mine`, `/orders/sales` |
+| `/sell/new` | Create a listing with images and certificates | `POST /listings` |
+| `/sell/[id]` | Review feedback, edit, certificates, schedule an auction, withdraw | `GET/PATCH/DELETE /listings/:id`, `GET/POST /listings/:id/certificates`, `POST /listings/:id/auction` |
+| `/login`, `/register`, `/verify`, `/forgot-password`, `/reset-password` | Account flows | `/auth/*` |
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Staff-only endpoints (`/admin/*`, `/verification/queue`, `POST /listings/:id/verification`,
+`POST /users/staff`) are used by the separate `admin/` app. `/payments/callback` is called
+by the payment provider, not by a browser.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Notes
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- The API stores URLs only. Sellers paste image and certificate URLs until a storage upload
+  service exists.
+- In development the `manual` payment gateway returns only a `transactionRef`. To confirm a
+  payment, post it to `/payments/callback` (see API.md). For a real provider, the checkout
+  page follows `redirectUrl`, or auto-posts `formFields` to it.
