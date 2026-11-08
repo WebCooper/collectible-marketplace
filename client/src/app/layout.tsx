@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import { Geist, Cinzel } from "next/font/google";
 import "./globals.css";
-import { SITE_NAME, SITE_TAGLINE } from "@/lib/constants";
+import { SITE_NAME } from "@/lib/constants";
+import { AuthProvider } from "@/providers/auth-provider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -39,10 +40,11 @@ export default function RootLayout({
   return (
     <html
       lang="en"
+      data-scroll-behavior="smooth"
       className={`${geistSans.variable} ${cinzel.variable} dark antialiased`}
     >
       <body className="min-h-screen bg-[#0a0e17] text-zinc-100 flex flex-col font-sans">
-        {children}
+        <AuthProvider>{children}</AuthProvider>
       </body>
     </html>
   );

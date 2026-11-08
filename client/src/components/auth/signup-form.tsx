@@ -2,89 +2,116 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { signupSchema, SignupFormData } from "@/lib/validations/signup-schema";
+import { useRouter } from "next/navigation";
+import {
+  signupSchema,
+  type SignupFormData,
+  type SignupFormInput,
+} from "@/lib/validations/signup-schema";
+import { authApi, type SessionUser } from "@/lib/api";
+import { apiFormErrors, zodFieldErrors, type FieldErrors } from "@/lib/form-errors";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { Alert } from "@/components/ui/alert";
+import { VerifyOtpForm } from "@/components/auth/verify-otp-form";
 import {
   User,
-  AtSign,
+  Phone,
   Mail,
   Lock,
   Eye,
   EyeOff,
   ArrowRight,
-  ShieldCheck,
   CheckCircle2,
   Sparkles,
+  Gavel,
+  Store,
 } from "lucide-react";
 
+type Field = keyof SignupFormInput;
+type Step = "details" | "verify" | "done";
+
+const ROLE_OPTIONS = [
+  {
+    value: "BUYER",
+    title: "Collector",
+    description: "Bid in live auctions and buy verified pieces",
+    icon: Gavel,
+  },
+  {
+    value: "SELLER",
+    title: "Consignor",
+    description: "List items for expert review and sale",
+    icon: Store,
+  },
+] as const;
+
+/** API (RegisterDto) property -> form field, for server-side validation messages. */
+const API_FIELDS: Record<string, Field> = {
+  name: "name",
+  email: "email",
+  phone: "phone",
+  password: "password",
+  role: "role",
+};
+
 export function SignupForm() {
-  const [formData, setFormData] = useState<SignupFormData>({
-    fullName: "",
-    username: "",
+  const router = useRouter();
+  const [step, setStep] = useState<Step>("details");
+  const [formData, setFormData] = useState<SignupFormInput>({
+    name: "",
     email: "",
+    phone: "",
+    role: "BUYER",
     password: "",
     confirmPassword: "",
-    collectorInterest: "ancient-coins",
     agreeTerms: false,
   });
-
-  const [errors, setErrors] = useState<{ [K in keyof SignupFormData]?: string }>({});
+  const [registeredEmail, setRegisteredEmail] = useState("");
+  const [verifiedUser, setVerifiedUser] = useState<SessionUser | null>(null);
+  const [errors, setErrors] = useState<FieldErrors<Field>>({});
+  const [formError, setFormError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [signupSuccess, setSignupSuccess] = useState(false);
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
-  ) => {
-    const { name, value, type } = e.target;
-    const checked = (e.target as HTMLInputElement).checked;
-
-    setFormData((prev) => ({
-      ...prev,
-      [name]: type === "checkbox" ? checked : value,
-    }));
-
-    if (errors[name as keyof SignupFormData]) {
-      setErrors((prev) => ({ ...prev, [name]: undefined }));
-    }
-  };
-
-  const handleFillDemo = () => {
-    setFormData({
-      fullName: "Sir Henry De Mel",
-      username: "demel_numis",
-      email: "henry.demel@lankanumis.lk",
-      password: "VaultPassword2026!",
-      confirmPassword: "VaultPassword2026!",
-      collectorInterest: "ancient-coins",
-      agreeTerms: true,
-    });
-    setErrors({});
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value, type, checked } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: type === "checkbox" ? checked : value }));
+    if (errors[name as Field]) setErrors((prev) => ({ ...prev, [name]: undefined }));
+    setFormError(null);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrors({});
+    setFormError(null);
 
     const result = signupSchema.safeParse(formData);
     if (!result.success) {
-      const fieldErrors: { [K in keyof SignupFormData]?: string } = {};
-      result.error.issues.forEach((err) => {
-        if (err.path[0]) {
-          fieldErrors[err.path[0] as keyof SignupFormData] = err.message;
-        }
-      });
-      setErrors(fieldErrors);
+      setErrors(zodFieldErrors<Field>(result.error));
       return;
     }
 
+    const data: SignupFormData = result.data;
     setIsLoading(true);
-    setTimeout(() => {
+    try {
+      await authApi.register({
+        name: data.name,
+        email: data.email,
+        password: data.password,
+        role: data.role,
+        ...(data.phone ? { phone: data.phone } : {}),
+      });
+      setRegisteredEmail(data.email);
+      setStep("verify");
+    } catch (error) {
+      const { fieldErrors, formError: message } = apiFormErrors(error, API_FIELDS);
+      setErrors(fieldErrors);
+      setFormError(message);
+    } finally {
       setIsLoading(false);
-      setSignupSuccess(true);
-    }, 1400);
+    }
   };
 
   return (
@@ -92,76 +119,122 @@ export function SignupForm() {
       <div className="space-y-2">
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-[rgba(201,162,39,0.3)] bg-[#101726] text-xs font-mono uppercase tracking-widest text-[#f1d27a]">
           <Sparkles className="h-3.5 w-3.5 text-[#f1d27a]" />
-          <span>Charter Ceylon Collector</span>
+          <span>{step === "details" ? "Charter Ceylon Collector" : "Step 2 of 2 · Verify e-mail"}</span>
         </div>
         <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-white font-serif">
-          Create Collector Dossier
+          {step === "verify" ? "Confirm Your E-mail" : "Create Collector Dossier"}
         </h2>
         <p className="text-xs sm:text-sm text-zinc-400">
-          Register to bid in live Colombo floor auctions, consign rare Ceylon items, and access vault custody.
+          {step === "verify"
+            ? "Enter the code we e-mailed you to activate your account."
+            : "Register to bid in live Colombo auctions and consign rare Ceylon items for expert review."}
         </p>
       </div>
 
-      {signupSuccess ? (
+      {step === "done" && verifiedUser && (
         <div className="p-8 rounded-2xl bg-cyan-950/80 border border-cyan-400/50 text-center space-y-4">
           <div className="h-14 w-14 rounded-full bg-cyan-500/20 text-cyan-400 mx-auto flex items-center justify-center">
             <CheckCircle2 className="h-8 w-8" />
           </div>
           <h3 className="text-xl font-bold text-white font-serif">Dossier Approved!</h3>
           <p className="text-xs text-zinc-300 leading-relaxed max-w-sm mx-auto">
-            Your credentials have been securely entered into the LankaNumis registry. Welcome to our global fraternity of Ceylon curators.
+            Welcome, {verifiedUser.name}. Your {verifiedUser.role === "SELLER" ? "consignor" : "collector"}{" "}
+            account is active and you are signed in.
           </p>
           <div className="pt-2">
-            <Link href="/">
-              <Button variant="gold" className="text-xs uppercase tracking-wider font-semibold font-mono">
-                Explore Live Lots
-              </Button>
-            </Link>
+            <Button
+              variant="gold"
+              className="text-xs uppercase tracking-wider font-semibold font-mono"
+              onClick={() => router.push("/listings")}
+            >
+              Explore Live Lots
+            </Button>
           </div>
         </div>
-      ) : (
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Demo fill button */}
-          <div className="flex items-center justify-between pb-1">
-            <button
-              type="button"
-              onClick={handleFillDemo}
-              className="text-[11px] text-[#f1d27a] hover:underline flex items-center gap-1 font-mono"
-            >
-              ⚡ Auto-fill Sri Lankan Collector Profile
-            </button>
-          </div>
+      )}
+
+      {step === "verify" && (
+        <VerifyOtpForm
+          email={registeredEmail}
+          onVerified={(session) => {
+            setVerifiedUser(session.user);
+            setStep("done");
+          }}
+        />
+      )}
+
+      {step === "details" && (
+        <form onSubmit={handleSubmit} className="space-y-4" noValidate>
+          {formError && <Alert variant="error">{formError}</Alert>}
+
+          {/* Account type -> RegisterDto.role */}
+          <fieldset>
+            <legend className="mb-1.5 block text-xs font-medium text-zinc-300">
+              I want to <span className="text-[#f1d27a]">*</span>
+            </legend>
+            <div className="grid grid-cols-2 gap-3">
+              {ROLE_OPTIONS.map(({ value, title, description, icon: Icon }) => {
+                const selected = formData.role === value;
+                return (
+                  <label
+                    key={value}
+                    className={`cursor-pointer rounded-xl border p-3 transition-all ${
+                      selected
+                        ? "border-[#c9a227] bg-[#c9a227]/10"
+                        : "border-[rgba(201,162,39,0.2)] bg-[#0d1424] hover:border-[rgba(201,162,39,0.45)]"
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="role"
+                      value={value}
+                      checked={selected}
+                      onChange={handleChange}
+                      className="sr-only"
+                    />
+                    <span className="flex items-center gap-2 text-sm font-semibold text-white">
+                      <Icon className="h-4 w-4 text-[#f1d27a]" /> {title}
+                    </span>
+                    <span className="mt-1 block text-[11px] leading-snug text-zinc-400">
+                      {description}
+                    </span>
+                  </label>
+                );
+              })}
+            </div>
+          </fieldset>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {/* Full Name */}
+            {/* Name */}
             <div>
-              <Label htmlFor="fullName" required>
-                Full Legal Name
+              <Label htmlFor="name" required>
+                Full Name
               </Label>
               <Input
-                id="fullName"
-                name="fullName"
-                placeholder="e.g. Sir Henry De Mel"
-                value={formData.fullName}
+                id="name"
+                name="name"
+                autoComplete="name"
+                placeholder="e.g. Kamala Silva"
+                value={formData.name}
                 onChange={handleChange}
                 leftIcon={<User className="h-4 w-4" />}
-                error={errors.fullName}
+                error={errors.name}
               />
             </div>
 
-            {/* Username */}
+            {/* Phone (optional) */}
             <div>
-              <Label htmlFor="username" required>
-                Collector Handle
-              </Label>
+              <Label htmlFor="phone">Mobile Number</Label>
               <Input
-                id="username"
-                name="username"
-                placeholder="demel_numis"
-                value={formData.username}
+                id="phone"
+                name="phone"
+                type="tel"
+                autoComplete="tel"
+                placeholder="+94771234567 (optional)"
+                value={formData.phone}
                 onChange={handleChange}
-                leftIcon={<AtSign className="h-4 w-4" />}
-                error={errors.username}
+                leftIcon={<Phone className="h-4 w-4" />}
+                error={errors.phone}
               />
             </div>
           </div>
@@ -169,38 +242,19 @@ export function SignupForm() {
           {/* Email */}
           <div>
             <Label htmlFor="email" required>
-              Confidential Email Address
+              Email Address
             </Label>
             <Input
               id="email"
               name="email"
               type="email"
-              placeholder="henry.demel@lankanumis.lk"
+              autoComplete="email"
+              placeholder="you@example.lk"
               value={formData.email}
               onChange={handleChange}
               leftIcon={<Mail className="h-4 w-4" />}
               error={errors.email}
             />
-          </div>
-
-          {/* Collecting Discipline for Sri Lanka */}
-          <div>
-            <Label htmlFor="collectorInterest" required>
-              Primary Collecting Focus
-            </Label>
-            <select
-              id="collectorInterest"
-              name="collectorInterest"
-              value={formData.collectorInterest}
-              onChange={handleChange}
-              className="flex h-11 w-full rounded-xl border border-[rgba(201,162,39,0.2)] bg-[#0d1424] px-4 py-2 text-sm text-zinc-100 transition-all focus-visible:outline-none focus-visible:border-[#c9a227] focus-visible:ring-2 focus-visible:ring-[#c9a227]/20 font-sans"
-            >
-              <option value="ancient-coins" className="bg-[#0c121e]">Ancient Sri Lankan Coins (Kahavanu &amp; Massa)</option>
-              <option value="proof-commemoratives" className="bg-[#0c121e]">CBSL Proof Sets &amp; Commemorative Crowns</option>
-              <option value="currency-notes" className="bg-[#0c121e]">Historic Ceylon Currency Notes (George VI / QE II)</option>
-              <option value="stamps" className="bg-[#0c121e]">Ceylon Philately &amp; Chalon Head Stamps</option>
-              <option value="medals" className="bg-[#0c121e]">Sri Lankan Medals &amp; Militaria</option>
-            </select>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -213,7 +267,8 @@ export function SignupForm() {
                 id="password"
                 name="password"
                 type={showPassword ? "text" : "password"}
-                placeholder="Min 8 chars, 1 uppercase, 1 number"
+                autoComplete="new-password"
+                placeholder="8+ chars, Aa, 1 number"
                 value={formData.password}
                 onChange={handleChange}
                 leftIcon={<Lock className="h-4 w-4" />}
@@ -222,6 +277,7 @@ export function SignupForm() {
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
                     className="p-1 hover:text-white transition-colors"
+                    aria-label={showPassword ? "Hide password" : "Show password"}
                   >
                     {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
@@ -239,6 +295,7 @@ export function SignupForm() {
                 id="confirmPassword"
                 name="confirmPassword"
                 type={showPassword ? "text" : "password"}
+                autoComplete="new-password"
                 placeholder="Repeat password"
                 value={formData.confirmPassword}
                 onChange={handleChange}
@@ -288,7 +345,7 @@ export function SignupForm() {
             isLoading={isLoading}
             className="w-full text-xs uppercase tracking-wider font-semibold gap-2 mt-4 shadow-lg shadow-[#c9a227]/20 font-mono"
           >
-            <span>Register Dossier &amp; Issue Colombo Paddle</span>
+            <span>Register Dossier</span>
             <ArrowRight className="h-4 w-4" />
           </Button>
 

@@ -2,13 +2,45 @@
 
 import * as React from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { NAV_LINKS, SITE_NAME } from "@/lib/constants";
+import { useAuth } from "@/providers/auth-provider";
 import { Button } from "@/components/ui/button";
-import { ShieldCheck, Search, Menu, X, Coins, Sparkles, User, ArrowRight } from "lucide-react";
+import { ShieldCheck, Search, Menu, X, Coins, Sparkles, User, ArrowRight, LogOut } from "lucide-react";
+
+const ROLE_LABELS = {
+  BUYER: "Collector",
+  SELLER: "Consignor",
+  APPRAISER: "Appraiser",
+  ADMIN: "Administrator",
+} as const;
 
 export function Navbar() {
+  const router = useRouter();
+  const { user, status, signOut } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
   const [scrolled, setScrolled] = React.useState(false);
+  const [query, setQuery] = React.useState("");
+  const [signingOut, setSigningOut] = React.useState(false);
+
+  // Keyword search across title, description, era and denomination (GET /listings?q=).
+  const submitSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    const q = query.trim();
+    setMobileMenuOpen(false);
+    router.push(q ? `/listings?q=${encodeURIComponent(q)}` : "/listings");
+  };
+
+  const handleSignOut = async () => {
+    setSigningOut(true);
+    try {
+      await signOut();
+    } finally {
+      setSigningOut(false);
+      setMobileMenuOpen(false);
+      router.refresh();
+    }
+  };
 
   React.useEffect(() => {
     const handleScroll = () => {
@@ -61,44 +93,81 @@ export function Navbar() {
           {/* Desktop Nav Links */}
           <nav className="hidden lg:flex items-center gap-1">
             {NAV_LINKS.map((link) => (
-              <a
+              <Link
                 key={link.name}
                 href={link.href}
                 className="px-3.5 py-2 text-sm font-medium text-zinc-300 hover:text-white rounded-lg hover:bg-white/5 transition-colors"
               >
                 {link.name}
-              </a>
+              </Link>
             ))}
           </nav>
 
           {/* Quick Search for Sri Lankan Coins & Notes */}
-          <div className="hidden md:flex items-center">
+          <form onSubmit={submitSearch} role="search" className="hidden md:flex items-center">
             <div className="relative w-64 xl:w-76">
               <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400" />
               <input
-                type="text"
+                type="search"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                aria-label="Search listings"
                 placeholder="Search Kahavanu, 1957 Crown, VOC..."
                 className="w-full bg-[#0d1524] text-xs text-zinc-100 placeholder:text-zinc-500 rounded-full pl-9 pr-14 py-2.5 border border-[rgba(201,162,39,0.25)] focus:outline-none focus:border-[#c9a227] focus:ring-1 focus:ring-[#c9a227]/40 transition-all"
               />
-              <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] bg-[#141f33] text-zinc-400 border border-zinc-700/60 px-1.5 py-0.5 rounded font-mono">
-                ⌘K
-              </span>
+              <button
+                type="submit"
+                aria-label="Search"
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] bg-[#141f33] text-zinc-400 hover:text-[#f1d27a] border border-zinc-700/60 px-1.5 py-0.5 rounded font-mono"
+              >
+                ↵
+              </button>
             </div>
-          </div>
+          </form>
 
           {/* Auth Actions */}
-          <div className="hidden sm:flex items-center gap-3">
-            <Link href="/login">
-              <Button variant="ghost" size="sm" className="text-xs uppercase tracking-wider text-zinc-300">
-                Sign In
-              </Button>
-            </Link>
-            <Link href="/signup">
-              <Button variant="gold" size="sm" className="text-xs uppercase tracking-wider gap-1.5 shadow-md">
-                <span>Join Bourse</span>
-                <ArrowRight className="h-3.5 w-3.5" />
-              </Button>
-            </Link>
+          <div className="hidden sm:flex items-center gap-3 min-w-[160px] justify-end">
+            {status === "authenticated" && user ? (
+              <>
+                <div className="flex items-center gap-2.5 text-right">
+                  <div className="h-8 w-8 rounded-full bg-[#c9a227]/15 border border-[#c9a227]/40 flex items-center justify-center text-[#f1d27a]">
+                    <User className="h-4 w-4" />
+                  </div>
+                  <div className="hidden lg:flex flex-col leading-tight">
+                    <span className="text-xs font-semibold text-white max-w-[140px] truncate">{user.name}</span>
+                    <span className="text-[10px] uppercase tracking-wider text-[#8fa0be] font-mono">
+                      {ROLE_LABELS[user.role]}
+                    </span>
+                  </div>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  isLoading={signingOut}
+                  onClick={handleSignOut}
+                  className="text-xs uppercase tracking-wider text-zinc-300 gap-1.5"
+                >
+                  {!signingOut && <LogOut className="h-3.5 w-3.5" />}
+                  Sign Out
+                </Button>
+              </>
+            ) : status === "guest" ? (
+              <>
+                <Link href="/login">
+                  <Button variant="ghost" size="sm" className="text-xs uppercase tracking-wider text-zinc-300">
+                    Sign In
+                  </Button>
+                </Link>
+                <Link href="/signup">
+                  <Button variant="gold" size="sm" className="text-xs uppercase tracking-wider gap-1.5 shadow-md">
+                    <span>Join Bourse</span>
+                    <ArrowRight className="h-3.5 w-3.5" />
+                  </Button>
+                </Link>
+              </>
+            ) : (
+              <div className="h-8 w-36 rounded-lg bg-white/5 animate-pulse" aria-hidden />
+            )}
           </div>
 
           {/* Mobile menu trigger */}
@@ -117,37 +186,59 @@ export function Navbar() {
       {/* Mobile menu drawer */}
       {mobileMenuOpen && (
         <div className="sm:hidden bg-[#0a0e17]/98 backdrop-blur-2xl border-b border-[rgba(201,162,39,0.2)] px-5 pt-4 pb-6 space-y-4">
-          <div className="relative">
+          <form onSubmit={submitSearch} role="search" className="relative">
             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400" />
             <input
-              type="text"
+              type="search"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              aria-label="Search listings"
               placeholder="Search Kahavanu, Ceylon notes, stamps..."
               className="w-full bg-[#0d1524] text-sm text-zinc-200 placeholder:text-zinc-500 rounded-xl pl-10 pr-3 py-2.5 border border-[rgba(201,162,39,0.25)] focus:outline-none"
             />
-          </div>
+          </form>
           <div className="flex flex-col space-y-1">
             {NAV_LINKS.map((link) => (
-              <a
+              <Link
                 key={link.name}
                 href={link.href}
                 onClick={() => setMobileMenuOpen(false)}
                 className="px-3 py-2 text-base font-medium text-zinc-200 hover:text-[#f1d27a] hover:bg-white/5 rounded-lg"
               >
                 {link.name}
-              </a>
+              </Link>
             ))}
           </div>
           <div className="pt-3 border-t border-white/10 flex flex-col gap-2.5">
-            <Link href="/login" onClick={() => setMobileMenuOpen(false)}>
-              <Button variant="outline" className="w-full justify-center">
-                <User className="h-4 w-4 mr-2" /> Collector Sign In
-              </Button>
-            </Link>
-            <Link href="/signup" onClick={() => setMobileMenuOpen(false)}>
-              <Button variant="gold" className="w-full justify-center">
-                Register for Bourse <ArrowRight className="h-4 w-4 ml-2" />
-              </Button>
-            </Link>
+            {status === "authenticated" && user ? (
+              <>
+                <p className="text-sm text-zinc-300 px-1">
+                  Signed in as <span className="font-semibold text-white">{user.name}</span>{" "}
+                  <span className="text-xs text-[#8fa0be]">({ROLE_LABELS[user.role]})</span>
+                </p>
+                <Button
+                  variant="outline"
+                  className="w-full justify-center"
+                  isLoading={signingOut}
+                  onClick={handleSignOut}
+                >
+                  {!signingOut && <LogOut className="h-4 w-4 mr-2" />} Sign Out
+                </Button>
+              </>
+            ) : (
+              <>
+                <Link href="/login" onClick={() => setMobileMenuOpen(false)}>
+                  <Button variant="outline" className="w-full justify-center">
+                    <User className="h-4 w-4 mr-2" /> Collector Sign In
+                  </Button>
+                </Link>
+                <Link href="/signup" onClick={() => setMobileMenuOpen(false)}>
+                  <Button variant="gold" className="w-full justify-center">
+                    Register for Bourse <ArrowRight className="h-4 w-4 ml-2" />
+                  </Button>
+                </Link>
+              </>
+            )}
           </div>
         </div>
       )}

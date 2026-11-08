@@ -6,13 +6,49 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 /**
- * Format currency in Sri Lankan Rupees (LKR / රු)
+ * Converts an API money value to a number. The API returns LKR amounts as
+ * decimal strings ("10500.50") so nothing is lost in transit.
  */
-export function formatLKR(amount: number, symbol: string = "රු"): string {
+export function toAmount(value: number | string | null | undefined): number {
+  if (value === null || value === undefined || value === "") return 0;
+  const amount = typeof value === "number" ? value : Number(value);
+  return Number.isFinite(amount) ? amount : 0;
+}
+
+/**
+ * Format currency in Sri Lankan Rupees (LKR / රු). Accepts the API's decimal
+ * strings as well as numbers; shows cents only when there are any.
+ */
+export function formatLKR(amount: number | string, symbol: string = "රු"): string {
+  const value = toAmount(amount);
   const formatted = new Intl.NumberFormat("en-LK", {
-    maximumFractionDigits: 0,
-  }).format(amount);
+    minimumFractionDigits: 0,
+    maximumFractionDigits: Number.isInteger(value) ? 0 : 2,
+  }).format(value);
   return `${symbol} ${formatted}`;
+}
+
+/**
+ * Only follow same-site relative paths after sign-in, so a crafted
+ * `?next=https://evil.example` link cannot bounce the user off-site.
+ */
+export function safeRedirectPath(next: string | null | undefined, fallback = "/"): string {
+  if (!next || !next.startsWith("/") || next.startsWith("//") || next.startsWith("/\\")) {
+    return fallback;
+  }
+  return next;
+}
+
+/** Builds `/login?next=<current path>` so the user comes back after signing in. */
+export function loginHref(returnTo: string): string {
+  return `/login?next=${encodeURIComponent(returnTo)}`;
+}
+
+export function formatDateTime(iso: string): string {
+  return new Intl.DateTimeFormat("en-LK", {
+    dateStyle: "medium",
+    timeStyle: "short",
+  }).format(new Date(iso));
 }
 
 export function formatCurrency(

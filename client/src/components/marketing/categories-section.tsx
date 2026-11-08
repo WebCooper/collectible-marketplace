@@ -1,20 +1,32 @@
-import React from "react";
-import { CATEGORIES } from "@/lib/constants";
-import { Coins, Award, Banknote, Stamp, Shield, ArrowUpRight } from "lucide-react";
+"use client";
 
-const iconMap = {
-  Coins: Coins,
-  Award: Award,
-  Banknote: Banknote,
-  Stamp: Stamp,
-  Shield: Shield,
+import React from "react";
+import Link from "next/link";
+import { CATEGORIES } from "@/lib/constants";
+import { listingsApi } from "@/lib/api";
+import { useApiQuery } from "@/hooks/use-api-query";
+import type { CategoryIcon } from "@/types";
+import { Coins, Award, Crown, Banknote, Stamp, Shield, ArrowUpRight } from "lucide-react";
+
+const iconMap: Record<CategoryIcon, React.ElementType> = {
+  Coins,
+  Award,
+  Crown,
+  Banknote,
+  Stamp,
+  Shield,
 };
 
 export function CategoriesSection() {
+  // Live ACTIVE-listing counts; categories with none are omitted by the API.
+  const { data: counts, error } = useApiQuery("category-counts", listingsApi.categories);
+  const countFor = (category: string) =>
+    counts?.find((c) => c.category === category)?.count ?? 0;
+
   return (
     <section id="categories" className="py-24 relative">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        
+
         {/* Section Header */}
         <div className="flex flex-col md:flex-row md:items-end justify-between mb-16 gap-6">
           <div>
@@ -36,11 +48,13 @@ export function CategoriesSection() {
         {/* Categories Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {CATEGORIES.map((cat) => {
-            const IconComp = iconMap[cat.icon as keyof typeof iconMap] || Coins;
+            const IconComp = iconMap[cat.icon] ?? Coins;
+            const count = countFor(cat.category);
             return (
-              <div
-                key={cat.id}
-                className="group relative rounded-3xl border border-[rgba(201,162,39,0.2)] bg-gradient-to-b from-[#0d1424]/80 to-[#090d18]/90 p-7 backdrop-blur-md hover:border-[rgba(201,162,39,0.45)] hover:-translate-y-1.5 transition-all duration-300 shadow-xl overflow-hidden cursor-pointer"
+              <Link
+                key={cat.category}
+                href={`/listings?category=${cat.category}`}
+                className="group relative rounded-3xl border border-[rgba(201,162,39,0.2)] bg-gradient-to-b from-[#0d1424]/80 to-[#090d18]/90 p-7 backdrop-blur-md hover:border-[rgba(201,162,39,0.45)] hover:-translate-y-1.5 transition-all duration-300 shadow-xl overflow-hidden"
               >
                 {/* Ambient Top Glow */}
                 <div className="absolute top-0 right-0 h-32 w-32 bg-[#c9a227]/5 rounded-full blur-2xl group-hover:bg-[#c9a227]/15 transition-all" />
@@ -74,13 +88,17 @@ export function CategoriesSection() {
 
                 <div className="mt-6 pt-4 border-t border-[rgba(201,162,39,0.1)] flex items-center justify-between text-xs text-zinc-400">
                   <span className="font-mono text-[#f1d27a] font-semibold">
-                    {cat.itemCount.toLocaleString()} Verified Specimens
+                    {counts
+                      ? `${count.toLocaleString()} Live ${count === 1 ? "Listing" : "Listings"}`
+                      : error !== undefined
+                        ? "Listings unavailable"
+                        : "Counting…"}
                   </span>
                   <span className="text-zinc-400 group-hover:text-white transition-colors">
                     Explore Era →
                   </span>
                 </div>
-              </div>
+              </Link>
             );
           })}
         </div>
