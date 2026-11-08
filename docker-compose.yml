@@ -1,0 +1,131 @@
+# Local development stack: PostgreSQL + migrations + backend + admin + client.
+#
+#   docker compose up --build                      start everything
+#   docker compose --profile seed run --rm seed    load sample data (once)
+#   docker compose down                            stop (keeps the database)
+#   docker compose down -v                         stop and wipe the database
+#
+# URLs:  client http://localhost:3000   backend http://localhost:3001 (docs /api)
+#        admin  http://localhost:5173   postgres localhost:5432
+#
+# Everything has a default, so no .env file is needed. To override a value,
+# export it or put it in a root .env file (for example POSTGRES_PASSWORD).
+#
+# NOTE: browsers call the API at http://localhost:3001 (the published port),
+# never http://backend:3001. Only container-to-container traffic uses service
+# names (the backend reaching "postgres" below). Use "localhost", not 127.0.0.1.
+
+name: collectible-marketplace
+
+x-backend-env: &backend-env
+  # Local stack runs over plain http, so default to development mode: cookies
+  # are not "Secure", the dev payment gateway works and JWT secrets may be the
+  # built-in fallbacks. Production values are set on Cloud Run, not here.
+  NODE_ENV: ${NODE_ENV:-development}
+  DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-collectible_marketplace}?schema=public
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-collectible_marketplace}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # One-shot job: applies the committed Prisma migrations, then exits.
+  migrate:
+    build:
+      context: ./backend
+      target: migrate
+    image: marketplace-backend-migrate
+    environment:
+      <<: *backend-env
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: "no"
+
+  backend:
+    build:
+      context: ./backend
+    image: marketplace-backend
+    restart: unless-stopped
+    environment:
+      <<: *backend-env
+      PORT: 3001
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3000,http://localhost:5173}
+      # Pass-through: only forwarded when set on your machine. Required (unique,
+      # 32+ characters) if you run with NODE_ENV=production. Left unset in
+      # development so the backend uses its built-in dev fallbacks.
+      JWT_SECRET:
+      JWT_REFRESH_SECRET:
+    ports:
+      - "3001:3001"
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    # The image defines a HEALTHCHECK on /health; this makes it visible here.
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://localhost:3001/ready').then(r=>r.json()).then(b=>process.exit(b.database==='up'?0:1)).catch(()=>process.exit(1))"]
+      interval: 15s
+      timeout: 5s
+      start_period: 20s
+      retries: 5
+
+  admin:
+    build:
+      context: ./admin
+      args:
+        # Baked into the bundle at build time; the browser calls this URL.
+        VITE_API_URL: ${PUBLIC_API_URL:-http://localhost:3001}
+    image: marketplace-admin
+    restart: unless-stopped
+    ports:
+      - "5173:8080"
+    depends_on:
+      backend:
+        condition: service_healthy
+
+  client:
+    build:
+      context: ./client
+      args:
+        # Baked into the bundle at build time; the browser calls this URL.
+        NEXT_PUBLIC_API_URL: ${PUBLIC_API_URL:-http://localhost:3001}
+        NEXT_PUBLIC_ENABLE_DEMO_ACCOUNTS: ${ENABLE_DEMO_ACCOUNTS:-true}
+    image: marketplace-client
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    depends_on:
+      backend:
+        condition: service_healthy
+
+  # Optional: docker compose --profile seed run --rm seed
+  # Seeded users all use the password Password123! (see backend/README.md).
+  seed:
+    profiles: ["seed"]
+    build:
+      context: ./backend
+      target: migrate
+    image: marketplace-backend-migrate
+    environment:
+      <<: *backend-env
+    command: ["node", "seed-dist/seed.js"]
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    restart: "no"
+
+volumes:
+  postgres-data:
