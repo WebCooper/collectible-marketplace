@@ -121,7 +121,7 @@ services:
     image: marketplace-backend-migrate
     environment:
       <<: *backend-env
-    command: ["npm", "run", "prisma:seed"]
+    command: ["node", "seed-dist/seed.js"]
     depends_on:
       migrate:
         condition: service_completed_successfully

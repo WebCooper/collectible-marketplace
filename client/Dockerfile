@@ -3,7 +3,7 @@
 # Build:  docker build -t marketplace-client \
 #           --build-arg NEXT_PUBLIC_API_URL=http://localhost:3001 ./client
 # ============================================
-ARG NODE_VERSION=22-slim
+ARG NODE_VERSION=22-alpine
 
 # ---- Stage 1: install dependencies ----
 FROM node:${NODE_VERSION} AS dependencies
