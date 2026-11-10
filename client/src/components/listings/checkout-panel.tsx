@@ -102,27 +102,27 @@ export function CheckoutPanel({
   if (result) {
     const isManual = result.payment.transactionRef.startsWith("manual_");
     return (
-      <div className="rounded-2xl border border-cyan-400/40 bg-cyan-950/40 p-5 space-y-3">
-        <div className="flex items-center gap-2 text-cyan-300">
+      <div className="rounded-md border border-line bg-white p-5 space-y-3">
+        <div className="flex items-center gap-2 text-success">
           <CheckCircle2 className="h-5 w-5" />
-          <h3 className="font-serif text-lg font-bold text-white">Order placed</h3>
+          <h3 className="font-serif text-lg font-semibold text-ink">Order placed</h3>
         </div>
-        <dl className="grid grid-cols-2 gap-y-1.5 text-xs">
-          <dt className="text-zinc-400">Amount</dt>
-          <dd className="text-right font-mono text-[#f1d27a]">{formatLKR(result.order.amount)}</dd>
-          <dt className="text-zinc-400">Order status</dt>
-          <dd className="text-right font-mono text-zinc-200">{result.order.status}</dd>
-          <dt className="text-zinc-400">Payment reference</dt>
-          <dd className="text-right font-mono text-zinc-200 truncate" title={result.payment.transactionRef}>
+        <dl className="grid grid-cols-2 gap-y-2 border-y border-line py-3 text-sm">
+          <dt className="text-muted-foreground">Amount</dt>
+          <dd className="text-right font-semibold tabular-nums text-ink">{formatLKR(result.order.amount)}</dd>
+          <dt className="text-muted-foreground">Order status</dt>
+          <dd className="text-right font-mono text-xs leading-5 text-ink">{result.order.status}</dd>
+          <dt className="text-muted-foreground">Payment reference</dt>
+          <dd className="text-right font-mono text-xs leading-5 text-ink truncate" title={result.payment.transactionRef}>
             {result.payment.transactionRef}
           </dd>
         </dl>
-        <p className="text-xs text-zinc-400">
+        <p className="text-xs text-muted-foreground">
           The item is reserved for you. The order moves to PAID once the payment provider confirms.
         </p>
         {isManual && process.env.NODE_ENV !== "production" && (
-          <div className="space-y-2 border-t border-white/10 pt-3">
-            <p className="text-[11px] text-zinc-500">
+          <div className="space-y-2 border-t border-line pt-3">
+            <p className="text-xs text-muted-foreground">
               Development: the backend uses its manual payment gateway, which waits for a callback.
             </p>
             <Button
@@ -144,8 +144,8 @@ export function CheckoutPanel({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-3" noValidate>
-      <div className="flex items-center gap-2 text-sm font-semibold text-white">
-        <Truck className="h-4 w-4 text-[#f1d27a]" /> Shipping details
+      <div className="flex items-center gap-2 text-sm font-semibold text-ink">
+        <Truck className="h-4 w-4 text-muted-foreground" /> Shipping details
       </div>
       {formError && <Alert variant="error">{formError}</Alert>}
       {FIELDS.map((field) => (
@@ -171,7 +171,7 @@ export function CheckoutPanel({
         type="submit"
         variant="gold"
         isLoading={isSubmitting}
-        className="w-full text-xs uppercase tracking-wider font-semibold"
+        className="w-full font-semibold"
       >
         Place Order
       </Button>

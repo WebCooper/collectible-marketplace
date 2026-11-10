@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Cinzel } from "next/font/google";
+import { Geist, Playfair_Display } from "next/font/google";
 import "./globals.css";
 import { SITE_NAME } from "@/lib/constants";
 import { AuthProvider } from "@/providers/auth-provider";
@@ -9,10 +9,10 @@ const geistSans = Geist({
   subsets: ["latin"],
 });
 
-const cinzel = Cinzel({
-  variable: "--font-cinzel",
+const display = Playfair_Display({
+  variable: "--font-display",
   subsets: ["latin"],
-  weight: ["400", "600", "700", "800", "900"],
+  weight: ["400", "500", "600", "700"],
 });
 
 export const metadata: Metadata = {
@@ -41,9 +41,9 @@ export default function RootLayout({
     <html
       lang="en"
       data-scroll-behavior="smooth"
-      className={`${geistSans.variable} ${cinzel.variable} dark antialiased`}
+      className={`${geistSans.variable} ${display.variable} antialiased`}
     >
-      <body className="min-h-screen bg-[#0a0e17] text-zinc-100 flex flex-col font-sans">
+      <body className="min-h-screen bg-background text-foreground flex flex-col font-sans">
         <AuthProvider>{children}</AuthProvider>
       </body>
     </html>

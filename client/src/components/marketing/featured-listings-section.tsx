@@ -33,42 +33,48 @@ export function FeaturedListingsSection() {
       : (listings ?? []).filter((item) => item.category === activeFilter);
 
   return (
-    <section id="featured" className="py-24 relative bg-[#070b13]/80 border-t border-[rgba(201,162,39,0.15)]">
+    <section id="featured" className="bg-white border-b border-line py-16 md:py-24">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
         {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-6">
+        <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-6">
           <div>
-            <div className="inline-flex items-center gap-2 text-xs font-mono uppercase tracking-widest text-cyan-400 mb-2">
-              <span className="h-2 w-2 rounded-full bg-cyan-400 animate-ping" /> Live Floor Bidding
+            <div className="mb-3 inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-live">
+              <span className="h-1.5 w-1.5 rounded-full bg-live" aria-hidden="true" /> Live Floor Bidding
             </div>
-            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-white font-serif">
+            <h2 className="font-serif text-3xl md:text-4xl font-semibold tracking-tight text-ink">
               Premier Ceylon Heritage Lots on the Block
             </h2>
-            <p className="text-sm text-zinc-400 mt-1">
+            <p className="text-base text-muted-foreground mt-2 max-w-2xl">
               Featured and expert-verified lots. Auction prices update live as bids land.
             </p>
           </div>
-
-          {/* Filter Pills */}
-          {filterTabs.length > 2 && (
-            <div className="flex items-center gap-1.5 p-1.5 rounded-2xl bg-[#0c121e] border border-[rgba(201,162,39,0.2)] overflow-x-auto max-w-full">
-              {filterTabs.map((tab) => (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveFilter(tab.id)}
-                  className={`px-4 py-2 rounded-xl text-xs font-medium whitespace-nowrap transition-all font-mono ${
-                    activeFilter === tab.id
-                      ? "bg-gradient-to-r from-[#c9a227] to-[#f1d27a] text-[#0a0e17] font-bold shadow-md"
-                      : "text-zinc-400 hover:text-white hover:bg-white/5"
-                  }`}
-                >
-                  {tab.label}
-                </button>
-              ))}
-            </div>
-          )}
+          <Link
+            href="/listings"
+            className="hidden md:inline-flex shrink-0 text-sm font-semibold text-ink underline-offset-4 hover:underline"
+          >
+            View all →
+          </Link>
         </div>
+
+        {/* Filter Tabs */}
+        {filterTabs.length > 2 && (
+          <div className="mb-8 flex items-center gap-6 border-b border-line overflow-x-auto max-w-full">
+            {filterTabs.map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveFilter(tab.id)}
+                className={`-mb-px border-b-2 py-3 text-sm whitespace-nowrap transition-colors ${
+                  activeFilter === tab.id
+                    ? "border-ink text-ink font-semibold"
+                    : "border-transparent text-muted-foreground hover:text-ink"
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+        )}
 
         {/* States */}
         {error !== undefined && !listings ? (
@@ -76,23 +82,23 @@ export function FeaturedListingsSection() {
             <p>{errorMessage(error, "Could not load featured lots.")}</p>
             <button
               onClick={reload}
-              className="inline-flex items-center gap-1 font-semibold text-[#f1d27a] hover:underline"
+              className="inline-flex items-center gap-1 font-semibold text-ink underline-offset-4 hover:underline"
             >
               <RotateCw className="h-3 w-3" /> Try again
             </button>
           </Alert>
         ) : loading && !listings ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-10">
             {Array.from({ length: 3 }, (_, i) => (
               <ListingCardSkeleton key={i} />
             ))}
           </div>
         ) : filteredItems.length === 0 ? (
-          <p className="text-center text-sm text-zinc-400 py-12">
+          <p className="text-center text-sm text-muted-foreground py-12 border border-dashed border-line rounded-md">
             No featured lots right now - new pieces appear here once an appraiser verifies them.
           </p>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-10">
             {filteredItems.map((item) => (
               <ListingCard key={item.id} listing={item} />
             ))}
@@ -100,11 +106,11 @@ export function FeaturedListingsSection() {
         )}
 
         {/* View All CTA */}
-        <div className="mt-14 text-center">
+        <div className="mt-12 pt-10 border-t border-line text-center">
           <Link href="/listings">
-            <Button variant="outline" size="lg" className="rounded-xl px-8 uppercase text-xs tracking-widest gap-2 hover:border-[#c9a227]">
+            <Button variant="outline" size="lg" className="px-8 gap-2">
               <span>Browse the Full Ceylon Heritage Catalog</span>
-              <ArrowRight className="h-4 w-4 text-[#f1d27a]" />
+              <ArrowRight className="h-4 w-4" />
             </Button>
           </Link>
         </div>

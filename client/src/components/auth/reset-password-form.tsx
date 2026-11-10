@@ -61,10 +61,10 @@ export function ResetPasswordForm() {
   return (
     <div className="w-full space-y-6">
       <div className="space-y-2">
-        <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-white font-serif">
+        <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight text-ink font-serif">
           Choose a New Password
         </h2>
-        <p className="text-xs sm:text-sm text-zinc-400">
+        <p className="text-sm text-muted-foreground leading-relaxed">
           Resetting your password signs you out on every device.
         </p>
       </div>
@@ -72,16 +72,16 @@ export function ResetPasswordForm() {
       {!token ? (
         <Alert variant="error">
           <p>This reset link is missing its token.</p>
-          <Link href="/forgot-password" className="font-semibold text-[#f1d27a] hover:underline">
+          <Link href="/forgot-password" className="text-ink font-semibold underline underline-offset-4 decoration-line-strong hover:decoration-ink">
             Request a new link →
           </Link>
         </Alert>
       ) : done ? (
-        <div className="p-6 rounded-2xl bg-cyan-950/80 border border-cyan-400/50 text-center space-y-3">
-          <CheckCircle2 className="h-8 w-8 text-cyan-400 mx-auto" />
-          <p className="text-sm text-zinc-200">{done}</p>
+        <div className="p-6 rounded-lg bg-success-soft border border-line text-center space-y-3">
+          <CheckCircle2 className="h-8 w-8 text-success mx-auto" />
+          <p className="text-sm text-ink">{done}</p>
           <Link href="/login">
-            <Button variant="gold" size="sm" className="mt-2 text-xs uppercase tracking-wider font-mono">
+            <Button variant="gold" size="sm" className="mt-2 font-semibold">
               Sign In
             </Button>
           </Link>
@@ -91,7 +91,7 @@ export function ResetPasswordForm() {
           {formError && (
             <Alert variant="error">
               <p>{formError}</p>
-              <Link href="/forgot-password" className="font-semibold text-[#f1d27a] hover:underline">
+              <Link href="/forgot-password" className="text-ink font-semibold underline underline-offset-4 decoration-line-strong hover:decoration-ink">
                 Request a new link →
               </Link>
             </Alert>
@@ -133,7 +133,7 @@ export function ResetPasswordForm() {
             variant="gold"
             size="lg"
             isLoading={isLoading}
-            className="w-full text-xs uppercase tracking-wider font-semibold gap-2 font-mono"
+            className="w-full font-semibold gap-2"
           >
             <span>Update Password</span>
             <ArrowRight className="h-4 w-4" />

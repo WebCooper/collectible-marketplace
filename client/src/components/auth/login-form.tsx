@@ -92,10 +92,10 @@ export function LoginForm() {
   return (
     <div className="w-full space-y-6">
       <div className="space-y-2">
-        <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-white font-serif">
+        <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight text-ink font-serif">
           Access Collector Dossier
         </h2>
-        <p className="text-xs sm:text-sm text-zinc-400">
+        <p className="text-sm text-muted-foreground leading-relaxed">
           Enter your credentials to manage bids, watch live Ceylon auctions, and track your orders.
         </p>
       </div>
@@ -105,7 +105,7 @@ export function LoginForm() {
           <Alert variant="error">
             <p>{formError}</p>
             {needsVerification && (
-              <Link href={verifyHref} className="font-semibold text-[#f1d27a] hover:underline">
+              <Link href={verifyHref} className="text-ink font-semibold underline underline-offset-4 decoration-line-strong hover:decoration-ink">
                 Enter your verification code →
               </Link>
             )}
@@ -138,7 +138,7 @@ export function LoginForm() {
             </Label>
             <Link
               href="/forgot-password"
-              className="text-[11px] text-zinc-400 hover:text-[#f1d27a] transition-colors font-mono"
+              className="text-xs text-muted-foreground underline-offset-4 hover:text-ink hover:underline transition-colors"
             >
               Forgot password?
             </Link>
@@ -156,7 +156,7 @@ export function LoginForm() {
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="p-1 hover:text-white transition-colors"
+                className="p-1 hover:text-ink transition-colors"
                 aria-label={showPassword ? "Hide password" : "Show password"}
               >
                 {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -172,7 +172,7 @@ export function LoginForm() {
           variant="gold"
           size="lg"
           isLoading={isLoading}
-          className="w-full text-xs uppercase tracking-wider font-semibold gap-2 mt-2 shadow-lg shadow-[#c9a227]/20 font-mono"
+          className="w-full font-semibold gap-2 mt-2"
         >
           <span>Sign In to Bourse</span>
           <ArrowRight className="h-4 w-4" />
@@ -182,11 +182,11 @@ export function LoginForm() {
         {DEMO_ACCOUNTS_ENABLED && (
           <div className="pt-4 space-y-3">
             <div className="relative flex items-center justify-center">
-              <div className="border-t border-[rgba(201,162,39,0.15)] w-full" />
-              <span className="bg-[#0c121e] px-3 text-[11px] text-zinc-500 uppercase tracking-widest font-mono whitespace-nowrap">
+              <div className="border-t border-line w-full" />
+              <span className="bg-white px-3 text-[11px] text-muted-foreground uppercase tracking-widest whitespace-nowrap">
                 or use a seeded account
               </span>
-              <div className="border-t border-[rgba(201,162,39,0.15)] w-full" />
+              <div className="border-t border-line w-full" />
             </div>
 
             <div className="grid grid-cols-2 gap-3">
@@ -196,10 +196,10 @@ export function LoginForm() {
                   type="button"
                   variant="outline"
                   size="sm"
-                  className="text-xs gap-2 font-mono"
+                  className="text-xs gap-2"
                   onClick={() => fillDemo(email)}
                 >
-                  <Icon className="h-4 w-4 text-[#f1d27a]" />
+                  <Icon className="h-4 w-4 text-brass" />
                   <span>{label}</span>
                 </Button>
               ))}
@@ -208,9 +208,9 @@ export function LoginForm() {
         )}
 
         {/* Footer note */}
-        <div className="pt-4 text-center text-xs text-zinc-400 font-mono">
+        <div className="pt-4 text-center text-sm text-muted-foreground">
           New to Sri Lankan collecting?{" "}
-          <Link href="/signup" className="text-[#f1d27a] font-semibold hover:underline">
+          <Link href="/signup" className="text-ink font-semibold underline underline-offset-4 decoration-line-strong hover:decoration-ink">
             Register dossier
           </Link>
         </div>

@@ -9,7 +9,7 @@ export default function MarketingLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="relative min-h-screen flex flex-col justify-between overflow-x-hidden">
+    <div className="relative min-h-screen flex flex-col justify-between overflow-x-clip bg-background">
       <AnimatedBackground />
       <Navbar />
       <main className="flex-1">{children}</main>

@@ -80,10 +80,10 @@ export function VerifyOtpForm({
       <Alert variant="info">
         <p>
           We sent a 6-digit verification code to{" "}
-          <span className="font-semibold text-white">{email}</span>. It expires in 10 minutes.
+          <span className="font-semibold text-ink">{email}</span>. It expires in 10 minutes.
         </p>
         {process.env.NODE_ENV !== "production" && (
-          <p className="text-zinc-400">
+          <p className="text-muted-foreground">
             Development: no e-mail is sent - the code is printed in the backend API log.
           </p>
         )}
@@ -119,7 +119,7 @@ export function VerifyOtpForm({
         variant="gold"
         size="lg"
         isLoading={isVerifying}
-        className="w-full text-xs uppercase tracking-wider font-semibold gap-2 font-mono"
+        className="w-full font-semibold gap-2"
       >
         <span>Verify &amp; Activate Account</span>
         <ArrowRight className="h-4 w-4" />
@@ -130,7 +130,7 @@ export function VerifyOtpForm({
           type="button"
           onClick={handleResend}
           disabled={isResending || cooldown > 0}
-          className="inline-flex items-center gap-1.5 text-xs text-zinc-400 hover:text-[#f1d27a] disabled:opacity-50 disabled:hover:text-zinc-400 font-mono"
+          className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-ink disabled:opacity-50 disabled:hover:text-muted-foreground"
         >
           <RotateCw className={`h-3.5 w-3.5 ${isResending ? "animate-spin" : ""}`} />
           {cooldown > 0 ? `Send a new code in ${cooldown}s` : "Send a new code"}
