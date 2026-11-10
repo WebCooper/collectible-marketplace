@@ -5,9 +5,9 @@ import { cn } from "@/lib/utils";
 type AlertVariant = "error" | "success" | "info";
 
 const styles: Record<AlertVariant, string> = {
-  error: "border-red-500/40 bg-red-950/40 text-red-200",
-  success: "border-cyan-400/40 bg-cyan-950/50 text-cyan-200",
-  info: "border-[rgba(201,162,39,0.35)] bg-[#141c2c]/80 text-zinc-300",
+  error: "border-live/30 bg-live-soft text-live",
+  success: "border-success/30 bg-success-soft text-success",
+  info: "border-line bg-surface text-ink-soft",
 };
 
 const icons: Record<AlertVariant, React.ElementType> = {
@@ -30,7 +30,7 @@ export function Alert({
     <div
       role={variant === "error" ? "alert" : "status"}
       className={cn(
-        "flex items-start gap-2.5 rounded-xl border px-3.5 py-3 text-xs leading-relaxed",
+        "flex items-start gap-2.5 rounded-md border px-3.5 py-3 text-[13px] leading-relaxed",
         styles[variant],
         className,
       )}

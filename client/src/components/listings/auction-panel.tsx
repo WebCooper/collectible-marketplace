@@ -72,7 +72,7 @@ export function AuctionPanel({
     return auctionQuery.error !== undefined ? (
       <Alert variant="error">{errorMessage(auctionQuery.error, "Could not load the auction.")}</Alert>
     ) : (
-      <div className="h-64 rounded-2xl bg-[#0d1424]/60 animate-pulse" />
+      <div className="h-64 rounded-md bg-surface animate-pulse" />
     );
   }
 
@@ -151,9 +151,9 @@ export function AuctionPanel({
   return (
     <div className="space-y-5">
       {/* Price + timer */}
-      <div className="rounded-2xl border border-[rgba(201,162,39,0.25)] bg-[#0d1424]/80 p-5 space-y-4">
+      <div className="rounded-md border border-line bg-white p-5 sm:p-6 space-y-5">
         <div className="flex items-center justify-between">
-          <span className="inline-flex items-center gap-1.5 text-[11px] font-mono uppercase tracking-widest text-cyan-300">
+          <span className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-live">
             {isOpen ? (
               <>
                 <Radio className="h-3.5 w-3.5 animate-pulse" /> Live auction
@@ -164,29 +164,29 @@ export function AuctionPanel({
               "Auction closed"
             )}
           </span>
-          <span className="inline-flex items-center gap-1.5 text-xs text-zinc-400 font-mono">
+          <span className="inline-flex items-center gap-1.5 text-sm text-muted-foreground tabular-nums">
             <Users className="h-3.5 w-3.5" /> {auction.bidCount} {auction.bidCount === 1 ? "bid" : "bids"}
           </span>
         </div>
 
         <div>
-          <span className="text-[11px] text-zinc-400 uppercase tracking-wider font-mono">
+          <span className="text-sm text-muted-foreground">
             {auction.status === "ENDED" ? "Final price" : auction.bidCount > 0 ? "Current high bid" : "Opening price"}
           </span>
-          <div className="text-4xl font-bold font-mono text-[#f1d27a]">{formatLKR(current)}</div>
+          <div className="mt-0.5 text-3xl sm:text-4xl font-bold tabular-nums text-ink">{formatLKR(current)}</div>
           {auction.lastBid && isOpen && (
-            <p className="text-[11px] text-cyan-300 mt-1">
+            <p className="text-xs text-ink-soft mt-1.5">
               Latest: {auction.lastBid.bidder.name} bid {formatLKR(auction.lastBid.currentPrice)}
             </p>
           )}
         </div>
 
-        <div className="grid grid-cols-2 gap-3 text-xs">
-          <div className="rounded-xl bg-[#0a0f1a] p-3">
-            <span className="flex items-center gap-1 text-zinc-500 font-mono">
+        <div className="grid grid-cols-2 divide-x divide-line border-y border-line text-xs">
+          <div className="py-3 first:pr-4 last:pl-4">
+            <span className="flex items-center gap-1 text-muted-foreground">
               <Clock className="h-3.5 w-3.5" /> {auction.status === "SCHEDULED" ? "Opens" : "Time left"}
             </span>
-            <span className="block mt-1 font-mono text-sm text-cyan-300">
+            <span className="block mt-1 text-base font-semibold tabular-nums text-live">
               {auction.status === "SCHEDULED" ? (
                 formatDateTime(auction.startTime)
               ) : (
@@ -194,12 +194,12 @@ export function AuctionPanel({
               )}
             </span>
           </div>
-          <div className="rounded-xl bg-[#0a0f1a] p-3">
-            <span className="text-zinc-500 font-mono">Min. increment</span>
-            <span className="block mt-1 font-mono text-sm text-zinc-200">{formatLKR(increment)}</span>
+          <div className="py-3 first:pr-4 last:pl-4">
+            <span className="text-muted-foreground">Min. increment</span>
+            <span className="block mt-1 text-base font-semibold tabular-nums text-ink">{formatLKR(increment)}</span>
           </div>
         </div>
-        <p className="text-[11px] text-zinc-500">
+        <p className="text-xs text-muted-foreground">
           Closes {formatDateTime(auction.endTime)}. A bid in the final 2 minutes extends the close.
         </p>
       </div>
@@ -211,7 +211,7 @@ export function AuctionPanel({
 
         {isOpen && authStatus === "guest" && (
           <Link href={loginHref(pathname)} className="block">
-            <Button variant="gold" size="lg" className="w-full text-xs uppercase tracking-wider gap-2">
+            <Button variant="gold" size="lg" className="w-full gap-2">
               <Gavel className="h-4 w-4" /> Sign in to bid
             </Button>
           </Link>
@@ -227,7 +227,7 @@ export function AuctionPanel({
               <form onSubmit={placeBid} className="space-y-2" noValidate>
                 <div className="flex gap-2">
                   <div className="relative flex-1">
-                    <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-sm text-zinc-500">රු</span>
+                    <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">රු</span>
                     <input
                       type="number"
                       inputMode="decimal"
@@ -240,10 +240,10 @@ export function AuctionPanel({
                       }}
                       placeholder={String(minNextBid)}
                       aria-label="Bid amount in LKR"
-                      className="h-12 w-full rounded-xl border border-[rgba(201,162,39,0.3)] bg-zinc-950/60 pl-10 pr-3 font-mono text-lg text-zinc-100 focus-visible:outline-none focus-visible:border-[#c9a227]"
+                      className="h-12 w-full rounded-md border border-input bg-white pl-10 pr-3 tabular-nums text-lg text-ink placeholder:text-muted-foreground focus:border-ink focus:outline-none focus:ring-2 focus:ring-ink/10"
                     />
                   </div>
-                  <Button type="submit" variant="gold" size="lg" isLoading={isBidding} className="gap-2 text-xs uppercase">
+                  <Button type="submit" variant="gold" size="lg" isLoading={isBidding} className="gap-2 px-6">
                     {!isBidding && <Gavel className="h-4 w-4" />} Bid
                   </Button>
                 </div>
@@ -255,26 +255,26 @@ export function AuctionPanel({
                         key={steps}
                         type="button"
                         onClick={() => setAmount(String(quick))}
-                        className="rounded-lg border border-[rgba(201,162,39,0.25)] px-2.5 py-1 text-[11px] font-mono text-zinc-300 hover:border-[#c9a227] hover:text-[#f1d27a]"
+                        className="rounded-md border border-line bg-white px-3 py-1.5 text-xs tabular-nums text-ink-soft hover:border-ink hover:text-ink"
                       >
                         {formatLKR(quick)}
                       </button>
                     );
                   })}
                 </div>
-                <p className="text-[11px] text-zinc-500">Minimum next bid: {formatLKR(minNextBid)}</p>
+                <p className="text-xs text-muted-foreground">Minimum next bid: {formatLKR(minNextBid)}</p>
               </form>
             )}
 
             {buyNowPrice !== null && current < buyNowPrice && (
-              <div className="rounded-xl border border-cyan-500/30 bg-cyan-950/30 p-3 space-y-2">
-                <p className="text-xs text-cyan-200">
+              <div className="rounded-md border border-line bg-surface p-4 space-y-3">
+                <p className="text-sm text-ink-soft">
                   Skip the wait - buy it now for{" "}
-                  <span className="font-mono font-semibold">{formatLKR(buyNowPrice)}</span>. This ends the auction.
+                  <span className="font-semibold tabular-nums text-ink">{formatLKR(buyNowPrice)}</span>. This ends the auction.
                 </p>
                 {confirmBuyNow ? (
                   <div className="grid grid-cols-2 gap-2">
-                    <Button variant="cyan" size="sm" isLoading={isBuying} onClick={buyNow} className="text-xs">
+                    <Button variant="gold" size="sm" isLoading={isBuying} onClick={buyNow} className="text-xs">
                       Confirm purchase
                     </Button>
                     <Button variant="ghost" size="sm" onClick={() => setConfirmBuyNow(false)} className="text-xs">
@@ -282,7 +282,7 @@ export function AuctionPanel({
                     </Button>
                   </div>
                 ) : (
-                  <Button variant="cyan" size="sm" onClick={() => setConfirmBuyNow(true)} className="w-full text-xs gap-1.5">
+                  <Button variant="outline" size="sm" onClick={() => setConfirmBuyNow(true)} className="w-full text-xs gap-1.5">
                     <Zap className="h-3.5 w-3.5" /> Buy Now
                   </Button>
                 )}
@@ -293,13 +293,13 @@ export function AuctionPanel({
 
         {/* Closed */}
         {auction.status === "ENDED" && (
-          <div className="rounded-2xl border border-[rgba(201,162,39,0.25)] bg-[#0d1424]/70 p-4 space-y-3">
-            <p className="flex items-center gap-2 text-sm text-white">
-              <Trophy className="h-4 w-4 text-[#f1d27a]" />
+          <div className="rounded-md border border-line bg-surface p-5 space-y-3">
+            <p className="flex items-center gap-2 text-sm text-ink">
+              <Trophy className="h-4 w-4 text-brass" />
               {winner ? (
                 <>
                   Won by <span className="font-semibold">{isWinner ? "you" : winner.name}</span> for{" "}
-                  <span className="font-mono text-[#f1d27a]">{formatLKR(current)}</span>
+                  <span className="font-semibold tabular-nums">{formatLKR(current)}</span>
                 </>
               ) : (
                 "This auction closed without bids."
@@ -317,25 +317,25 @@ export function AuctionPanel({
 
       {/* Bid history */}
       <div className="space-y-2">
-        <h3 className="text-sm font-semibold text-white font-serif">Bid history</h3>
+        <h3 className="text-[13px] font-semibold uppercase tracking-wider text-ink">Bid history</h3>
         {bidHistory.length > 0 ? (
-          <ul className="divide-y divide-white/5 rounded-xl border border-white/5 bg-[#0a0f1a]/60">
+          <ul className="divide-y divide-line border-y border-line">
             {bidHistory.map((bid) => (
-              <li key={bid.id} className="flex items-center justify-between px-3 py-2 text-xs">
-                <span className="text-zinc-300">
+              <li key={bid.id} className="flex items-center justify-between py-2.5 text-sm">
+                <span className="text-ink-soft">
                   {user?.id === bid.bidder.id ? "You" : bid.bidder.name}
-                  {bid.status === "ACTIVE" && <span className="ml-2 text-[10px] text-cyan-400">LEADING</span>}
-                  {bid.status === "WON" && <span className="ml-2 text-[10px] text-[#f1d27a]">WON</span>}
+                  {bid.status === "ACTIVE" && <span className="ml-2 text-[10px] font-semibold tracking-wider text-live">LEADING</span>}
+                  {bid.status === "WON" && <span className="ml-2 text-[10px] font-semibold tracking-wider text-success">WON</span>}
                 </span>
                 <span className="flex items-center gap-3">
-                  <span className="text-zinc-500">{formatDateTime(bid.placedAt)}</span>
-                  <span className="font-mono text-[#f1d27a]">{formatLKR(bid.amount)}</span>
+                  <span className="text-xs text-muted-foreground">{formatDateTime(bid.placedAt)}</span>
+                  <span className="font-semibold tabular-nums text-ink">{formatLKR(bid.amount)}</span>
                 </span>
               </li>
             ))}
           </ul>
         ) : (
-          <p className="text-xs text-zinc-500">
+          <p className="text-sm text-muted-foreground">
             {bidsQuery.loading ? "Loading bids…" : "No bids yet - be the first."}
           </p>
         )}

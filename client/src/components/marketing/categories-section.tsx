@@ -24,29 +24,27 @@ export function CategoriesSection() {
     counts?.find((c) => c.category === category)?.count ?? 0;
 
   return (
-    <section id="categories" className="py-24 relative">
+    <section id="categories" className="bg-surface border-b border-line py-16 md:py-24">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
         {/* Section Header */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between mb-16 gap-6">
+        <div className="flex flex-col md:flex-row md:items-end justify-between mb-10 md:mb-12 gap-6">
           <div>
-            <div className="inline-flex items-center gap-2 text-xs font-mono uppercase tracking-widest text-[#f1d27a] mb-2">
-              <span className="h-1.5 w-1.5 rounded-full bg-[#f1d27a]" /> 2,300 Years of Chronology
-            </div>
-            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-white font-serif">
+            <p className="eyebrow mb-3">2,300 Years of Chronology</p>
+            <h2 className="font-serif text-3xl md:text-4xl font-semibold tracking-tight text-ink">
               Curated Sri Lankan Collecting Disciplines
             </h2>
-            <p className="text-xs text-zinc-400 font-sans mt-1">
+            <p className="text-sm text-muted-foreground mt-2">
               ශ්‍රී ලාංකේය ඓතිහාසික කාසි, මුදල් නෝට්ටු සහ මුද්දර වර්ගීකරණය
             </p>
           </div>
-          <p className="text-sm text-zinc-400 max-w-md">
+          <p className="text-sm text-muted-foreground max-w-md md:text-right">
             Cataloged in accordance with H.W. Codrington&apos;s numismatic taxonomy and Central Bank of Sri Lanka archival references.
           </p>
         </div>
 
         {/* Categories Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {CATEGORIES.map((cat) => {
             const IconComp = iconMap[cat.icon] ?? Coins;
             const count = countFor(cat.category);
@@ -54,47 +52,44 @@ export function CategoriesSection() {
               <Link
                 key={cat.category}
                 href={`/listings?category=${cat.category}`}
-                className="group relative rounded-3xl border border-[rgba(201,162,39,0.2)] bg-gradient-to-b from-[#0d1424]/80 to-[#090d18]/90 p-7 backdrop-blur-md hover:border-[rgba(201,162,39,0.45)] hover:-translate-y-1.5 transition-all duration-300 shadow-xl overflow-hidden"
+                className="group flex flex-col rounded-md border border-line bg-white p-6 transition-[border-color,box-shadow] duration-150 hover:border-ink hover:shadow-[0_10px_28px_-14px_rgba(20,20,20,0.25)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink/30"
               >
-                {/* Ambient Top Glow */}
-                <div className="absolute top-0 right-0 h-32 w-32 bg-[#c9a227]/5 rounded-full blur-2xl group-hover:bg-[#c9a227]/15 transition-all" />
-
                 <div className="flex items-start justify-between mb-5">
-                  <div className="h-14 w-14 rounded-2xl bg-[#c9a227]/10 border border-[#c9a227]/30 flex items-center justify-center text-[#f1d27a] group-hover:bg-gradient-to-br group-hover:from-[#c9a227] group-hover:to-[#f1d27a] group-hover:text-[#0a0e17] transition-all duration-300 shadow-lg">
-                    <IconComp className="h-7 w-7" />
+                  <div className="h-11 w-11 rounded-md bg-surface border border-line flex items-center justify-center text-brass">
+                    <IconComp className="h-5 w-5" />
                   </div>
                   <div className="text-right">
-                    <span className="text-[11px] font-semibold font-mono text-zinc-300 bg-white/5 border border-white/10 px-3 py-1 rounded-full group-hover:border-[#c9a227]/40 group-hover:text-[#f1d27a] transition-colors">
+                    <span className="inline-block text-[11px] font-medium text-ink-soft border border-line px-2 py-0.5 rounded-sm">
                       {cat.tag}
                     </span>
-                    <span className="block text-[10px] text-cyan-400 font-mono mt-1">
+                    <span className="block text-[11px] text-muted-foreground tabular-nums mt-1">
                       {cat.eraRange}
                     </span>
                   </div>
                 </div>
 
-                <div className="space-y-2">
-                  <h3 className="text-xl font-bold text-white group-hover:text-[#f1d27a] transition-colors font-serif flex items-center justify-between">
+                <div className="space-y-1.5 flex-1">
+                  <h3 className="font-serif text-xl font-semibold text-ink flex items-center justify-between gap-2">
                     {cat.name}
-                    <ArrowUpRight className="h-4 w-4 opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all text-[#f1d27a]" />
+                    <ArrowUpRight className="h-4 w-4 text-muted-foreground transition-colors group-hover:text-ink" />
                   </h3>
-                  <p className="text-[11px] text-zinc-400 font-sans">
+                  <p className="text-xs text-muted-foreground">
                     {cat.sinhalaName}
                   </p>
-                  <p className="text-xs text-zinc-400 leading-relaxed pt-1">
+                  <p className="text-sm text-ink-soft leading-relaxed pt-1">
                     {cat.description}
                   </p>
                 </div>
 
-                <div className="mt-6 pt-4 border-t border-[rgba(201,162,39,0.1)] flex items-center justify-between text-xs text-zinc-400">
-                  <span className="font-mono text-[#f1d27a] font-semibold">
+                <div className="mt-6 pt-4 border-t border-line flex items-center justify-between text-xs">
+                  <span className="font-semibold tabular-nums text-ink">
                     {counts
                       ? `${count.toLocaleString()} Live ${count === 1 ? "Listing" : "Listings"}`
                       : error !== undefined
                         ? "Listings unavailable"
                         : "Counting…"}
                   </span>
-                  <span className="text-zinc-400 group-hover:text-white transition-colors">
+                  <span className="font-medium text-muted-foreground underline-offset-4 group-hover:text-ink group-hover:underline">
                     Explore Era →
                   </span>
                 </div>

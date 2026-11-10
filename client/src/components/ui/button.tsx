@@ -11,29 +11,29 @@ export interface ButtonProps
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant = "default", size = "default", isLoading, children, disabled, ...props }, ref) => {
     const baseStyles =
-      "inline-flex items-center justify-center whitespace-nowrap rounded-xl text-sm font-medium transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#c9a227]/50 disabled:pointer-events-none disabled:opacity-50 cursor-pointer active:scale-[0.98]";
+      "inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-semibold transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink/30 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 cursor-pointer";
 
     const variants = {
       default:
-        "bg-white text-zinc-950 shadow-md hover:bg-zinc-100 dark:bg-zinc-100 dark:text-zinc-950 dark:hover:bg-white",
+        "bg-ink text-white hover:bg-[#2b2b2b]",
       gold:
-        "bg-gradient-to-r from-[#c9a227] via-[#e2be49] to-[#f1d27a] text-[#0a0e17] font-bold shadow-md shadow-[#c9a227]/25 hover:shadow-lg hover:shadow-[#c9a227]/35 hover:brightness-105 border border-[#f1d27a]/40",
+        "bg-ink text-white hover:bg-[#2b2b2b]",
       cyan:
-        "bg-gradient-to-r from-cyan-500 to-teal-400 text-stone-950 font-bold shadow-md shadow-cyan-500/25 hover:shadow-lg hover:shadow-cyan-500/35 hover:brightness-105 border border-cyan-300/40",
+        "bg-live text-white hover:bg-[#a5182f]",
       outline:
-        "border border-[rgba(201,162,39,0.3)] bg-[#0d1424]/40 backdrop-blur-md text-zinc-200 hover:bg-[#0d1424]/80 hover:text-white hover:border-[#c9a227]/60",
+        "border border-ink bg-white text-ink hover:bg-ink hover:text-white",
       ghost:
-        "text-zinc-300 hover:bg-white/10 hover:text-white",
+        "text-ink-soft hover:bg-surface hover:text-ink",
       secondary:
-        "bg-[#131c2d] text-zinc-100 border border-[rgba(201,162,39,0.2)] hover:bg-[#1a263d] hover:border-[rgba(201,162,39,0.4)]",
+        "bg-surface text-ink border border-line hover:bg-surface-2",
       destructive:
-        "bg-red-600/90 text-white hover:bg-red-600 shadow-sm",
+        "bg-live text-white hover:bg-[#a5182f]",
     };
 
     const sizes = {
       default: "h-10 px-4 py-2",
-      sm: "h-8 rounded-lg px-3 text-xs",
-      lg: "h-12 rounded-xl px-7 text-base font-semibold",
+      sm: "h-9 px-3.5 text-xs",
+      lg: "h-12 px-7 text-[15px]",
       icon: "h-10 w-10",
     };
 

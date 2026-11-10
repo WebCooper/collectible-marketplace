@@ -24,7 +24,6 @@ import {
   EyeOff,
   ArrowRight,
   CheckCircle2,
-  Sparkles,
   Gavel,
   Store,
 } from "lucide-react";
@@ -117,14 +116,13 @@ export function SignupForm() {
   return (
     <div className="w-full space-y-6">
       <div className="space-y-2">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-[rgba(201,162,39,0.3)] bg-[#101726] text-xs font-mono uppercase tracking-widest text-[#f1d27a]">
-          <Sparkles className="h-3.5 w-3.5 text-[#f1d27a]" />
+        <div className="eyebrow">
           <span>{step === "details" ? "Charter Ceylon Collector" : "Step 2 of 2 · Verify e-mail"}</span>
         </div>
-        <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-white font-serif">
+        <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight text-ink font-serif">
           {step === "verify" ? "Confirm Your E-mail" : "Create Collector Dossier"}
         </h2>
-        <p className="text-xs sm:text-sm text-zinc-400">
+        <p className="text-sm text-muted-foreground leading-relaxed">
           {step === "verify"
             ? "Enter the code we e-mailed you to activate your account."
             : "Register to bid in live Colombo auctions and consign rare Ceylon items for expert review."}
@@ -132,19 +130,19 @@ export function SignupForm() {
       </div>
 
       {step === "done" && verifiedUser && (
-        <div className="p-8 rounded-2xl bg-cyan-950/80 border border-cyan-400/50 text-center space-y-4">
-          <div className="h-14 w-14 rounded-full bg-cyan-500/20 text-cyan-400 mx-auto flex items-center justify-center">
+        <div className="p-8 rounded-lg bg-surface border border-line text-center space-y-4">
+          <div className="h-14 w-14 rounded-full bg-success-soft text-success mx-auto flex items-center justify-center">
             <CheckCircle2 className="h-8 w-8" />
           </div>
-          <h3 className="text-xl font-bold text-white font-serif">Dossier Approved!</h3>
-          <p className="text-xs text-zinc-300 leading-relaxed max-w-sm mx-auto">
+          <h3 className="text-xl font-semibold text-ink font-serif">Dossier Approved!</h3>
+          <p className="text-sm text-ink-soft leading-relaxed max-w-sm mx-auto">
             Welcome, {verifiedUser.name}. Your {verifiedUser.role === "SELLER" ? "consignor" : "collector"}{" "}
             account is active and you are signed in.
           </p>
           <div className="pt-2">
             <Button
               variant="gold"
-              className="text-xs uppercase tracking-wider font-semibold font-mono"
+              className="font-semibold"
               onClick={() => router.push("/listings")}
             >
               Explore Live Lots
@@ -169,8 +167,8 @@ export function SignupForm() {
 
           {/* Account type -> RegisterDto.role */}
           <fieldset>
-            <legend className="mb-1.5 block text-xs font-medium text-zinc-300">
-              I want to <span className="text-[#f1d27a]">*</span>
+            <legend className="mb-1.5 block text-xs font-medium text-ink">
+              I want to <span className="text-live">*</span>
             </legend>
             <div className="grid grid-cols-2 gap-3">
               {ROLE_OPTIONS.map(({ value, title, description, icon: Icon }) => {
@@ -178,10 +176,10 @@ export function SignupForm() {
                 return (
                   <label
                     key={value}
-                    className={`cursor-pointer rounded-xl border p-3 transition-all ${
+                    className={`cursor-pointer rounded-md border p-3 transition-colors ${
                       selected
-                        ? "border-[#c9a227] bg-[#c9a227]/10"
-                        : "border-[rgba(201,162,39,0.2)] bg-[#0d1424] hover:border-[rgba(201,162,39,0.45)]"
+                        ? "border-ink bg-surface ring-1 ring-ink"
+                        : "border-line bg-white hover:border-line-strong"
                     }`}
                   >
                     <input
@@ -192,10 +190,10 @@ export function SignupForm() {
                       onChange={handleChange}
                       className="sr-only"
                     />
-                    <span className="flex items-center gap-2 text-sm font-semibold text-white">
-                      <Icon className="h-4 w-4 text-[#f1d27a]" /> {title}
+                    <span className="flex items-center gap-2 text-sm font-semibold text-ink">
+                      <Icon className="h-4 w-4 text-brass" /> {title}
                     </span>
-                    <span className="mt-1 block text-[11px] leading-snug text-zinc-400">
+                    <span className="mt-1 block text-[11px] leading-snug text-muted-foreground">
                       {description}
                     </span>
                   </label>
@@ -276,7 +274,7 @@ export function SignupForm() {
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="p-1 hover:text-white transition-colors"
+                    className="p-1 hover:text-ink transition-colors"
                     aria-label={showPassword ? "Hide password" : "Show password"}
                   >
                     {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -314,26 +312,26 @@ export function SignupForm() {
                 type="checkbox"
                 checked={formData.agreeTerms}
                 onChange={handleChange}
-                className="mt-1 h-4 w-4 rounded border-zinc-700 bg-zinc-900 text-[#c9a227] focus:ring-[#c9a227] cursor-pointer"
+                className="mt-1 h-4 w-4 rounded-sm border-line-strong bg-white accent-ink focus:ring-ink/10 cursor-pointer"
               />
-              <label htmlFor="agreeTerms" className="text-xs text-zinc-400 cursor-pointer select-none leading-relaxed">
+              <label htmlFor="agreeTerms" className="text-xs text-muted-foreground cursor-pointer select-none leading-relaxed">
                 I agree to the{" "}
-                <a href="#" className="text-[#f1d27a] hover:underline">
+                <a href="#" className="text-ink underline underline-offset-4 decoration-line-strong hover:decoration-ink">
                   Terms of Auction
                 </a>
                 ,{" "}
-                <a href="#" className="text-[#f1d27a] hover:underline">
+                <a href="#" className="text-ink underline underline-offset-4 decoration-line-strong hover:decoration-ink">
                   Commercial Escrow Protocol
                 </a>
                 , and{" "}
-                <a href="#" className="text-[#f1d27a] hover:underline">
+                <a href="#" className="text-ink underline underline-offset-4 decoration-line-strong hover:decoration-ink">
                   Antiquities Ordinance Provenance Declaration
                 </a>
                 .
               </label>
             </div>
             {errors.agreeTerms && (
-              <p className="mt-1.5 text-xs text-red-400">{errors.agreeTerms}</p>
+              <p className="mt-1.5 text-xs text-live">{errors.agreeTerms}</p>
             )}
           </div>
 
@@ -343,16 +341,16 @@ export function SignupForm() {
             variant="gold"
             size="lg"
             isLoading={isLoading}
-            className="w-full text-xs uppercase tracking-wider font-semibold gap-2 mt-4 shadow-lg shadow-[#c9a227]/20 font-mono"
+            className="w-full font-semibold gap-2 mt-4"
           >
             <span>Register Dossier</span>
             <ArrowRight className="h-4 w-4" />
           </Button>
 
           {/* Link to login */}
-          <div className="pt-4 text-center text-xs text-zinc-400 font-mono">
+          <div className="pt-4 text-center text-sm text-muted-foreground">
             Already have an active collector account?{" "}
-            <Link href="/login" className="text-[#f1d27a] font-semibold hover:underline">
+            <Link href="/login" className="text-ink font-semibold underline underline-offset-4 decoration-line-strong hover:decoration-ink">
               Sign In to Bourse
             </Link>
           </div>

@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { NAV_LINKS, SITE_NAME } from "@/lib/constants";
 import { useAuth } from "@/providers/auth-provider";
 import { Button } from "@/components/ui/button";
-import { ShieldCheck, Search, Menu, X, Coins, Sparkles, User, ArrowRight, LogOut } from "lucide-react";
+import { ShieldCheck, Search, Menu, X, Coins, User, ArrowRight, LogOut } from "lucide-react";
 
 const ROLE_LABELS = {
   BUYER: "Collector",
@@ -52,92 +52,75 @@ export function Navbar() {
 
   return (
     <header
-      className={`sticky top-0 z-50 transition-all duration-300 ${
+      className={`sticky top-0 z-50 bg-white transition-shadow duration-200 ${
         scrolled
-          ? "bg-[#0a0e17]/95 backdrop-blur-xl border-b border-[rgba(201,162,39,0.25)] shadow-2xl shadow-black/80"
-          : "bg-[#0a0e17]/70 backdrop-blur-md border-b border-[rgba(201,162,39,0.12)]"
+          ? "shadow-[0_1px_0_0_var(--border),0_8px_24px_-16px_rgba(20,20,20,0.25)]"
+          : "shadow-[0_1px_0_0_var(--border)]"
       }`}
     >
-      {/* Top micro-bar: Sri Lankan Numismatic Guarantee */}
-      <div className="bg-gradient-to-r from-[#c9a227]/15 via-[#22d3ee]/10 to-[#c9a227]/15 border-b border-[rgba(201,162,39,0.15)] py-1.5 px-4 text-center text-xs text-zinc-300 hidden sm:flex items-center justify-center gap-2">
-        <span className="inline-block h-2 w-2 rounded-full bg-cyan-400 animate-pulse shadow-sm shadow-cyan-400" />
-        <span className="font-semibold text-white">Colombo Floor Bourse:</span>
-        <span>Over රු 42.5M authenticated this cycle • SLNS &amp; PCGS Dual-Certified</span>
-        <span className="text-[#c9a227]/60 hidden md:inline">|</span>
-        <span className="text-zinc-400 hidden md:inline flex items-center gap-1">
-          <ShieldCheck className="h-3.5 w-3.5 text-[#f1d27a] inline" /> 100% Central Bank Compliant Escrow
-        </span>
+      {/* Top utility bar */}
+      <div className="hidden sm:block bg-ink text-white/80">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-9 flex items-center justify-center gap-2 text-[11px] tracking-wide">
+          <span className="inline-block h-1.5 w-1.5 rounded-full bg-live" />
+          <span className="font-semibold text-white">Colombo Floor Bourse:</span>
+          <span>Over රු 42.5M authenticated this cycle • SLNS &amp; PCGS Dual-Certified</span>
+          <span className="text-white/30 hidden md:inline">|</span>
+          <span className="hidden md:inline-flex items-center gap-1">
+            <ShieldCheck className="h-3.5 w-3.5 text-white/70" /> 100% Central Bank Compliant Escrow
+          </span>
+        </div>
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-20">
-          
-          {/* Brand Logo with Antique Gold Frame */}
-          <Link href="/" className="flex items-center gap-3.5 group">
-            <div className="relative h-11 w-11 rounded-xl bg-gradient-to-br from-[#c9a227] via-[#e2be49] to-[#977413] p-0.5 shadow-lg shadow-[#c9a227]/25 group-hover:shadow-[#c9a227]/45 transition-all">
-              <div className="h-full w-full rounded-[10px] bg-[#0c121e] flex items-center justify-center">
-                <Coins className="h-6 w-6 text-[#f1d27a] group-hover:rotate-12 transition-transform duration-300" />
-              </div>
+        <div className="flex items-center justify-between gap-6 h-[72px]">
+          {/* Brand */}
+          <Link href="/" className="flex items-center gap-3 group shrink-0">
+            <div className="h-10 w-10 rounded-full border border-ink flex items-center justify-center">
+              <Coins className="h-5 w-5 text-ink group-hover:rotate-12 transition-transform duration-300" />
             </div>
-            <div className="flex flex-col">
-              <span className="text-2xl font-extrabold tracking-wider text-white font-serif flex items-center gap-1.5">
+            <div className="flex flex-col leading-none">
+              <span className="text-[22px] font-semibold tracking-tight text-ink font-serif">
                 {SITE_NAME}
-                <Sparkles className="h-3.5 w-3.5 text-[#f1d27a]" />
               </span>
-              <span className="text-[10px] uppercase tracking-[0.25em] text-[#8fa0be] font-medium font-mono">
+              <span className="mt-1 text-[9.5px] uppercase tracking-[0.22em] text-muted-foreground font-medium">
                 Sri Lanka Rare Collectibles
               </span>
             </div>
           </Link>
 
-          {/* Desktop Nav Links */}
-          <nav className="hidden lg:flex items-center gap-1">
-            {NAV_LINKS.map((link) => (
-              <Link
-                key={link.name}
-                href={link.href}
-                className="px-3.5 py-2 text-sm font-medium text-zinc-300 hover:text-white rounded-lg hover:bg-white/5 transition-colors"
-              >
-                {link.name}
-              </Link>
-            ))}
-          </nav>
-
-          {/* Quick Search for Sri Lankan Coins & Notes */}
-          <form onSubmit={submitSearch} role="search" className="hidden md:flex items-center">
-            <div className="relative w-64 xl:w-76">
-              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400" />
+          {/* Search */}
+          <form onSubmit={submitSearch} role="search" className="hidden md:flex flex-1 max-w-xl">
+            <div className="relative w-full">
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <input
                 type="search"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 aria-label="Search listings"
                 placeholder="Search Kahavanu, 1957 Crown, VOC..."
-                className="w-full bg-[#0d1524] text-xs text-zinc-100 placeholder:text-zinc-500 rounded-full pl-9 pr-14 py-2.5 border border-[rgba(201,162,39,0.25)] focus:outline-none focus:border-[#c9a227] focus:ring-1 focus:ring-[#c9a227]/40 transition-all"
+                className="w-full h-11 bg-surface text-sm text-ink placeholder:text-[#9a968d] rounded-full pl-10 pr-24 border border-transparent focus:outline-none focus:bg-white focus:border-ink transition-colors"
               />
               <button
                 type="submit"
                 aria-label="Search"
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] bg-[#141f33] text-zinc-400 hover:text-[#f1d27a] border border-zinc-700/60 px-1.5 py-0.5 rounded font-mono"
+                className="absolute right-1.5 top-1/2 -translate-y-1/2 h-8 px-4 rounded-full bg-ink text-white text-xs font-semibold hover:bg-[#2b2b2b] transition-colors cursor-pointer"
               >
-                ↵
+                Search
               </button>
             </div>
           </form>
 
           {/* Auth Actions */}
-          <div className="hidden sm:flex items-center gap-3 min-w-[160px] justify-end">
+          <div className="hidden sm:flex items-center gap-2 min-w-[160px] justify-end shrink-0">
             {status === "authenticated" && user ? (
               <>
-                <div className="flex items-center gap-2.5 text-right">
-                  <div className="h-8 w-8 rounded-full bg-[#c9a227]/15 border border-[#c9a227]/40 flex items-center justify-center text-[#f1d27a]">
+                <div className="flex items-center gap-2.5">
+                  <div className="h-9 w-9 rounded-full bg-surface border border-line flex items-center justify-center text-ink">
                     <User className="h-4 w-4" />
                   </div>
                   <div className="hidden lg:flex flex-col leading-tight">
-                    <span className="text-xs font-semibold text-white max-w-[140px] truncate">{user.name}</span>
-                    <span className="text-[10px] uppercase tracking-wider text-[#8fa0be] font-mono">
-                      {ROLE_LABELS[user.role]}
-                    </span>
+                    <span className="text-[13px] font-semibold text-ink max-w-[140px] truncate">{user.name}</span>
+                    <span className="text-[11px] text-muted-foreground">{ROLE_LABELS[user.role]}</span>
                   </div>
                 </div>
                 <Button
@@ -145,7 +128,7 @@ export function Navbar() {
                   size="sm"
                   isLoading={signingOut}
                   onClick={handleSignOut}
-                  className="text-xs uppercase tracking-wider text-zinc-300 gap-1.5"
+                  className="gap-1.5"
                 >
                   {!signingOut && <LogOut className="h-3.5 w-3.5" />}
                   Sign Out
@@ -154,19 +137,19 @@ export function Navbar() {
             ) : status === "guest" ? (
               <>
                 <Link href="/login">
-                  <Button variant="ghost" size="sm" className="text-xs uppercase tracking-wider text-zinc-300">
+                  <Button variant="ghost" size="sm">
                     Sign In
                   </Button>
                 </Link>
                 <Link href="/signup">
-                  <Button variant="gold" size="sm" className="text-xs uppercase tracking-wider gap-1.5 shadow-md">
+                  <Button variant="gold" size="sm" className="gap-1.5 rounded-full px-5">
                     <span>Join Bourse</span>
                     <ArrowRight className="h-3.5 w-3.5" />
                   </Button>
                 </Link>
               </>
             ) : (
-              <div className="h-8 w-36 rounded-lg bg-white/5 animate-pulse" aria-hidden />
+              <div className="h-9 w-36 rounded-md bg-surface animate-pulse" aria-hidden />
             )}
           </div>
 
@@ -174,7 +157,7 @@ export function Navbar() {
           <div className="flex sm:hidden">
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="p-2 rounded-lg text-zinc-400 hover:text-white hover:bg-white/5 transition-colors"
+              className="p-2 rounded-md text-ink hover:bg-surface transition-colors"
               aria-label="Toggle menu"
             >
               {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
@@ -183,38 +166,53 @@ export function Navbar() {
         </div>
       </div>
 
+      {/* Section nav */}
+      <nav className="hidden lg:block border-t border-line">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center gap-8 h-11">
+          {NAV_LINKS.map((link) => (
+            <Link
+              key={link.name}
+              href={link.href}
+              className="relative h-full inline-flex items-center text-[13px] font-medium text-ink-soft hover:text-ink transition-colors after:absolute after:inset-x-0 after:bottom-0 after:h-0.5 after:bg-ink after:origin-left after:scale-x-0 hover:after:scale-x-100 after:transition-transform"
+            >
+              {link.name}
+            </Link>
+          ))}
+        </div>
+      </nav>
+
       {/* Mobile menu drawer */}
       {mobileMenuOpen && (
-        <div className="sm:hidden bg-[#0a0e17]/98 backdrop-blur-2xl border-b border-[rgba(201,162,39,0.2)] px-5 pt-4 pb-6 space-y-4">
+        <div className="sm:hidden bg-white border-t border-line px-5 pt-4 pb-6 space-y-4">
           <form onSubmit={submitSearch} role="search" className="relative">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400" />
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <input
               type="search"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               aria-label="Search listings"
               placeholder="Search Kahavanu, Ceylon notes, stamps..."
-              className="w-full bg-[#0d1524] text-sm text-zinc-200 placeholder:text-zinc-500 rounded-xl pl-10 pr-3 py-2.5 border border-[rgba(201,162,39,0.25)] focus:outline-none"
+              className="w-full h-11 bg-surface text-sm text-ink placeholder:text-[#9a968d] rounded-full pl-10 pr-3 border border-transparent focus:outline-none focus:bg-white focus:border-ink"
             />
           </form>
-          <div className="flex flex-col space-y-1">
+          <div className="flex flex-col divide-y divide-line">
             {NAV_LINKS.map((link) => (
               <Link
                 key={link.name}
                 href={link.href}
                 onClick={() => setMobileMenuOpen(false)}
-                className="px-3 py-2 text-base font-medium text-zinc-200 hover:text-[#f1d27a] hover:bg-white/5 rounded-lg"
+                className="py-3 text-[15px] font-medium text-ink hover:text-brass"
               >
                 {link.name}
               </Link>
             ))}
           </div>
-          <div className="pt-3 border-t border-white/10 flex flex-col gap-2.5">
+          <div className="pt-3 border-t border-line flex flex-col gap-2.5">
             {status === "authenticated" && user ? (
               <>
-                <p className="text-sm text-zinc-300 px-1">
-                  Signed in as <span className="font-semibold text-white">{user.name}</span>{" "}
-                  <span className="text-xs text-[#8fa0be]">({ROLE_LABELS[user.role]})</span>
+                <p className="text-sm text-ink-soft">
+                  Signed in as <span className="font-semibold text-ink">{user.name}</span>{" "}
+                  <span className="text-xs text-muted-foreground">({ROLE_LABELS[user.role]})</span>
                 </p>
                 <Button
                   variant="outline"

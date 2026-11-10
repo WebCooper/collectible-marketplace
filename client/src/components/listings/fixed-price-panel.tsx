@@ -23,13 +23,13 @@ export function FixedPricePanel({ listing }: { listing: ListingDetail }) {
 
   return (
     <div className="space-y-4">
-      <div className="rounded-2xl border border-[rgba(201,162,39,0.25)] bg-[#0d1424]/80 p-5 space-y-2">
-        <span className="inline-flex items-center gap-1.5 text-[11px] font-mono uppercase tracking-widest text-cyan-300">
+      <div className="rounded-md border border-line bg-white p-5 space-y-1.5">
+        <span className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
           <Tag className="h-3.5 w-3.5" /> Fixed price
         </span>
-        <div className="text-4xl font-bold font-mono text-[#f1d27a]">{formatLKR(listing.startingPrice)}</div>
+        <div className="text-3xl sm:text-4xl font-bold tabular-nums text-ink">{formatLKR(listing.startingPrice)}</div>
         {!available && !checkingOut && (
-          <p className="text-sm text-zinc-400">This item is no longer available.</p>
+          <p className="text-sm text-live">This item is no longer available.</p>
         )}
       </div>
 
@@ -37,7 +37,7 @@ export function FixedPricePanel({ listing }: { listing: ListingDetail }) {
         <CheckoutPanel listingId={listing.id} />
       ) : available && status === "guest" ? (
         <Link href={loginHref(pathname)} className="block">
-          <Button variant="gold" size="lg" className="w-full text-xs uppercase tracking-wider gap-2">
+          <Button variant="gold" size="lg" className="w-full gap-2">
             <ShoppingBag className="h-4 w-4" /> Sign in to buy
           </Button>
         </Link>
@@ -50,7 +50,7 @@ export function FixedPricePanel({ listing }: { listing: ListingDetail }) {
           variant="gold"
           size="lg"
           onClick={() => setCheckingOut(true)}
-          className="w-full text-xs uppercase tracking-wider gap-2"
+          className="w-full gap-2"
         >
           <ShoppingBag className="h-4 w-4" /> Buy Now
         </Button>

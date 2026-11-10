@@ -13,32 +13,32 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
       <div className="w-full">
         <div className="relative flex items-center w-full">
           {leftIcon && (
-            <div className="absolute left-3.5 flex items-center pointer-events-none text-zinc-400">
+            <div className="absolute left-3.5 flex items-center pointer-events-none text-muted-foreground">
               {leftIcon}
             </div>
           )}
           <input
             type={type}
             className={cn(
-              "flex h-11 w-full rounded-xl border border-zinc-800 bg-zinc-950/60 px-4 py-2 text-sm text-zinc-100 placeholder:text-zinc-500 transition-all duration-200",
-              "focus-visible:outline-none focus-visible:border-amber-500/80 focus-visible:ring-2 focus-visible:ring-amber-500/20",
-              "disabled:cursor-not-allowed disabled:opacity-50",
+              "flex h-11 w-full rounded-md border border-input bg-white px-3.5 py-2 text-sm text-ink placeholder:text-[#9a968d] transition-colors duration-150",
+              "focus-visible:outline-none focus-visible:border-ink focus-visible:ring-2 focus-visible:ring-ink/10",
+              "disabled:cursor-not-allowed disabled:bg-surface disabled:opacity-60",
               leftIcon && "pl-10",
               rightIcon && "pr-10",
-              error && "border-red-500/80 focus-visible:ring-red-500/20 focus-visible:border-red-500",
+              error && "border-live focus-visible:ring-live/15 focus-visible:border-live",
               className
             )}
             ref={ref}
             {...props}
           />
           {rightIcon && (
-            <div className="absolute right-3.5 flex items-center text-zinc-400">
+            <div className="absolute right-3.5 flex items-center text-muted-foreground">
               {rightIcon}
             </div>
           )}
         </div>
         {error && (
-          <p className="mt-1.5 text-xs text-red-400 flex items-center gap-1">
+          <p className="mt-1.5 text-xs text-live flex items-center gap-1">
             <svg
               className="h-3.5 w-3.5"
               fill="none"
