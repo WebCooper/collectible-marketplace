@@ -3,7 +3,11 @@
 # Build:  docker build -t marketplace-client \
 #           --build-arg NEXT_PUBLIC_API_URL=http://localhost:3001 ./client
 # ============================================
-ARG NODE_VERSION=22-alpine
+# Debian "slim", not Alpine: with the Google fonts in src/app/layout.tsx,
+# `next build` (Turbopack) fails on Alpine/musl with "Can't resolve
+# '@vercel/turbopack-next/internal/font/google/font'". The same build passes on
+# glibc. Costs ~90 MB more than Alpine.
+ARG NODE_VERSION=22-slim
 
 # ---- Stage 1: install dependencies ----
 FROM node:${NODE_VERSION} AS dependencies
