@@ -19,7 +19,10 @@ class LoggingTransport implements NotificationTransport {
   send(notification: OutboundNotification): Promise<void> {
     this.logger.log(
       `[${this.channel}] -> ${notification.email ?? notification.phone ?? notification.userId}: ` +
-        `${notification.title} | ${notification.message}`,
+        `${notification.title} | ${notification.message}` +
+        // Reset and verify links live here, not in the message; without this a
+        // developer using the log-only transport could never follow them.
+        (notification.actionUrl ? ` | ${notification.actionUrl}` : ''),
     );
     return Promise.resolve();
   }

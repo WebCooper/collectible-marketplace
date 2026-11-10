@@ -57,8 +57,8 @@ Use `"role": "SELLER"` for a seller. `phone` and `role` are optional.
 
 ### 1.2 Verify OTP — `POST /auth/verify-otp` (public)
 
-The 6-digit code is printed in the API's console log (nothing is e-mailed in
-development).
+The 6-digit code arrives by e-mail when `RESEND_API_KEY` is set; otherwise it is
+printed in the API's console log.
 
 ```json
 { "email": "test.buyer@example.lk", "code": "123456" }
@@ -116,8 +116,9 @@ No body. Clears the cookies.
 { "email": "buyer@marketplace.lk" }
 ```
 
-The reset token appears in the API log (as `payload.token`). Unknown e-mails get
-the same `200` reply.
+The e-mail contains a link `…/reset-password?token=<token>`; copy the token from
+it (with no `RESEND_API_KEY` the same link is printed in the API log). Unknown
+e-mails get the same `200` reply.
 
 ### 1.8 Reset password — `POST /auth/reset-password` (public)
 

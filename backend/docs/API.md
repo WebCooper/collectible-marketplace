@@ -142,7 +142,9 @@ lowercase letter, one uppercase letter and one digit.
 
 **409** if the e-mail is already registered. The account stays
 `PENDING_VERIFICATION` and **cannot sign in** until the code is confirmed. In
-development the code is written to the API log instead of being e-mailed.
+development with no `RESEND_API_KEY` the code is written to the API log instead
+of being e-mailed. The e-mail also carries a "Verify my account" link to the
+client's `/verify?email=…` page.
 
 ### `POST /auth/verify-otp`
 

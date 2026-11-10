@@ -116,6 +116,10 @@ export class AuthService {
         message: `Your verification code is ${code}. It expires in ${ttlMinutes} minutes.`,
         email: user.email,
         phone: user.phone ?? undefined,
+        actionUrl: `${this.clientUrl()}/verify?email=${encodeURIComponent(user.email)}`,
+        actionLabel: 'Verify my account',
+        // The code is a secret: send it, but never store the message.
+        sensitive: true,
       },
       [NotificationChannel.EMAIL, NotificationChannel.SMS],
     );
@@ -245,9 +249,12 @@ export class AuthService {
           userId: user.id,
           type: NotificationType.OTP,
           title: 'Reset your password',
-          message: `Use this link to choose a new password. It expires in ${ttlMinutes} minutes.`,
-          payload: { token },
+          message: `We received a request to reset your password. Use the button below to choose a new one. The link expires in ${ttlMinutes} minutes; if you did not ask for this, you can ignore this e-mail.`,
           email: user.email,
+          actionUrl: `${this.clientUrl()}/reset-password?token=${token}`,
+          actionLabel: 'Choose a new password',
+          // The link carries the reset token: send it, never store it.
+          sensitive: true,
         },
         [NotificationChannel.EMAIL],
       );
@@ -301,6 +308,13 @@ export class AuthService {
   }
 
   // --- Helpers ------------------------------------------------------------
+
+  /// Public address of the client app, used for links in e-mails.
+  private clientUrl() {
+    return (
+      this.config.get<string>('CLIENT_URL') || 'http://localhost:3000'
+    ).replace(/\/+$/, '');
+  }
 
   private hashPassword(plain: string) {
     const rounds = Number(this.config.get('BCRYPT_SALT_ROUNDS') ?? 10);

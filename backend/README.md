@@ -49,9 +49,14 @@ Seeded accounts all use the password **`Password123!`**:
 Verify it is up: `curl localhost:3001/health` → `{"status":"ok",…}` and
 `curl localhost:3001/ready` → `{"status":"ready","database":"up"}`.
 
-In development no e-mail or SMS is actually sent. Verification codes and
-password-reset links are written to the API log; seeded users are already
-verified, so you only need this for newly registered accounts.
+**E-mail.** With `RESEND_API_KEY` empty (the default) nothing is actually sent:
+verification codes and reset links are written to the API log instead, so no
+account is needed to develop. To send real e-mail, create a free
+[Resend](https://resend.com) account, put the key in `.env`, and restart. Until
+you verify a domain you own in Resend you can only send to your own Resend
+account address, so register with that address when testing. SMS is still
+log-only. Seeded users are already verified, so this only matters for newly
+registered accounts.
 
 ## Configuration
 
@@ -73,7 +78,10 @@ All settings are environment variables, loaded from `.env` (see
 | `PASSWORD_RESET_TTL_MINUTES` | `30` | Reset-link lifetime |
 | `AUCTION_ANTI_SNIPE_WINDOW_SECONDS` | `120` | A bid this close to the end extends the auction |
 | `AUCTION_ANTI_SNIPE_EXTENSION_SECONDS` | `120` | New time remaining after an extending bid |
-| `PAYMENT_*`, `SMTP_*`, `SMS_API_KEY`, `GCP_*`, `GCS_BUCKET` | empty | External-system settings, consumed by the integration layer (see [Integration points](#integration-points)) |
+| `RESEND_API_KEY` | empty | [Resend](https://resend.com) API key. Empty = e-mails are only logged |
+| `EMAIL_FROM` | `Collectible Marketplace <onboarding@resend.dev>` | Sender. Must use a domain verified in Resend once you have one |
+| `CLIENT_URL` | `http://localhost:3000` | Public address of the client app; used for the links in e-mails (verify, reset password, listings) |
+| `PAYMENT_*`, `SMS_API_KEY`, `GCP_*`, `GCS_BUCKET` | empty | Other external-system settings, consumed by the integration layer (see [Integration points](#integration-points)) |
 
 **Production safeguards.** With `NODE_ENV=production` the API **refuses to start**
 unless `JWT_SECRET` and `JWT_REFRESH_SECRET` are unique values of at least 32
@@ -248,18 +256,29 @@ state changes and notifications are already handled by the order module. A
 provider-side **refund** is not yet part of the interface; the dispute flow only
 marks payments `REFUNDED` in our records.
 
-**E-mail and SMS.** Implement `NotificationTransport`
+**E-mail (Resend) and SMS.** E-mail is delivered by `ResendEmailTransport`
+([`src/notifications/transports/resend-email.transport.ts`](src/notifications/transports/resend-email.transport.ts)),
+selected in `src/notifications/notifications.module.ts` whenever `RESEND_API_KEY`
+is set; otherwise a log-only transport is used. The HTML and plain-text bodies
+come from [`email-template.ts`](src/notifications/transports/email-template.ts)
+(all text is escaped; a button links to the client when there is somewhere to
+go). SMS is still log-only: implement `NotificationTransport`
 ([`src/notifications/notification-dispatcher.ts`](src/notifications/notification-dispatcher.ts))
-and register it in `src/notifications/notifications.module.ts`:
+for a provider such as Text.lk or Twilio and register it as `SMS_TRANSPORT`:
 
 ```ts
-{ provide: EMAIL_TRANSPORT, useClass: NodemailerTransport },
-{ provide: SMS_TRANSPORT, useClass: TwilioTransport }
+{ provide: SMS_TRANSPORT, useClass: TextLkTransport }
 ```
 
 Delivery runs off the request path with exponential-backoff retries (5
 attempts), so a slow provider never delays bidding or checkout. The queue is
 in-memory; replacing it with Bull/Redis is local to `NotificationsService`.
+
+Messages that carry a secret (the sign-up code and the reset link) are flagged
+`sensitive`: they are sent but **never saved** to the `Notification` table, so a
+database leak cannot expose a live code or link. In production set
+`RESEND_API_KEY`, a verified `EMAIL_FROM` and the deployed `CLIENT_URL`; without
+a key the API logs a warning and sign-up OTPs are not delivered.
 
 **Cloud storage.** The API stores object **URLs**, never file bytes. The intended
 flow: the client obtains a signed upload URL, uploads straight to the bucket,
@@ -342,7 +361,8 @@ DATABASE_URL_TEST=postgresql://…/collectible_marketplace_test npm run test:e2e
 | API exits at start-up with `JWT_SECRET must be set…` | `NODE_ENV=production` with a missing, short or placeholder secret |
 | `/ready` says `"database":"down"` | Wrong `DATABASE_URL`, database not running, or migrations not applied |
 | `401` on every call from the browser | Missing `credentials: 'include'`, an origin not in `CORS_ORIGINS`, or HTTP with a production (`Secure`) cookie |
-| Cannot sign in after registering | Account is `PENDING_VERIFICATION` — confirm the code (see the API log in development) |
+| Cannot sign in after registering | Account is `PENDING_VERIFICATION` — confirm the code. With no `RESEND_API_KEY` it is in the API log |
+| No e-mail arrives | `RESEND_API_KEY` unset (check the start-up warning), or an unverified Resend domain: until then Resend only delivers to your own account address. The API log shows Resend's error and the retries |
 | `429 Too Many Requests` | Rate limit (10/s, 120/min); back off |
 | Signed out after changing password | Intended: all sessions are invalidated, sign in again |
 | Checkout/payment never completes locally | The development gateway waits for you to `POST /payments/callback` with the `transactionRef` from the checkout response |
