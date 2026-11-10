@@ -46,16 +46,20 @@ export class NotificationsService {
     outbound: OutboundNotification,
     channels: NotificationChannel[] = [NotificationChannel.IN_APP],
   ) {
-    const record = await this.prisma.notification.create({
-      data: {
-        userId: outbound.userId,
-        type: outbound.type,
-        title: outbound.title,
-        message: outbound.message,
-        channel: NotificationChannel.IN_APP,
-        payload: (outbound.payload ?? undefined) as Prisma.InputJsonValue,
-      },
-    });
+    // Sensitive messages (OTP codes, reset links) skip the in-app record: the
+    // notification table stores message text in the clear.
+    const record = outbound.sensitive
+      ? null
+      : await this.prisma.notification.create({
+          data: {
+            userId: outbound.userId,
+            type: outbound.type,
+            title: outbound.title,
+            message: outbound.message,
+            channel: NotificationChannel.IN_APP,
+            payload: (outbound.payload ?? undefined) as Prisma.InputJsonValue,
+          },
+        });
 
     const externalChannels = channels.filter(
       (channel) => channel !== NotificationChannel.IN_APP,

@@ -10,6 +10,14 @@ export interface OutboundNotification {
   /// Address used by the e-mail/SMS transports. Ignored for IN_APP.
   email?: string;
   phone?: string;
+  /// Link the e-mail should offer as a button (verify page, reset page...).
+  /// Transient: never stored with the in-app record.
+  actionUrl?: string;
+  actionLabel?: string;
+  /// The message carries a secret (OTP code, reset link). It is delivered
+  /// over the external channels only and never written to the database, so a
+  /// database leak cannot expose a still-valid code or link.
+  sensitive?: boolean;
 }
 
 /**

@@ -292,6 +292,53 @@ describe('AuthService', () => {
     });
   });
 
+  describe('e-mailed secrets', () => {
+    it('sends the sign-up code with a verify link, flagged as sensitive', async () => {
+      prisma.user.findUnique.mockResolvedValue(null);
+
+      await service.register({
+        name: 'Kamala Silva',
+        email: 'kamala@example.lk',
+        password: 'Password123!',
+      });
+
+      const [outbound] = notifications.notify.mock.calls[0] as [
+        {
+          sensitive: boolean;
+          actionUrl: string;
+          message: string;
+        },
+      ];
+      expect(outbound.sensitive).toBe(true);
+      expect(outbound.actionUrl).toBe(
+        'http://localhost:3000/verify?email=kamala%40example.lk',
+      );
+      expect(outbound.message).toMatch(/\b\d{6}\b/);
+    });
+
+    it('sends a working reset link whose token matches the stored hash', async () => {
+      prisma.user.findUnique.mockResolvedValue(activeUser);
+
+      await service.forgotPassword({ email: activeUser.email });
+
+      const [outbound] = notifications.notify.mock.calls[0] as [
+        { sensitive: boolean; actionUrl: string; payload?: unknown },
+      ];
+      const token = new URL(outbound.actionUrl).searchParams.get('token')!;
+      const stored = (
+        prisma.authToken.create.mock.calls[0] as [
+          { data: { tokenHash: string } },
+        ]
+      )[0].data.tokenHash;
+
+      expect(outbound.actionUrl).toContain('/reset-password?token=');
+      expect(sha256(token)).toBe(stored);
+      expect(outbound.sensitive).toBe(true);
+      // The raw token travels only inside the link, never as stored payload.
+      expect(outbound.payload).toBeUndefined();
+    });
+  });
+
   describe('resetPassword', () => {
     it('rejects an invalid or expired token', async () => {
       prisma.authToken.findFirst.mockResolvedValue(null);

@@ -23,6 +23,12 @@ x-backend-env: &backend-env
   # built-in fallbacks. Production values are set on Cloud Run, not here.
   NODE_ENV: ${NODE_ENV:-development}
   DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-collectible_marketplace}?schema=public
+  # E-mail via Resend. Leave RESEND_API_KEY unset to only log e-mails (OTP codes
+  # then appear in `docker compose logs backend`). Export it, or put it in a
+  # root .env file, to send real e-mail.
+  RESEND_API_KEY: ${RESEND_API_KEY:-}
+  EMAIL_FROM: ${EMAIL_FROM:-Collectible Marketplace <onboarding@resend.dev>}
+  CLIENT_URL: ${CLIENT_URL:-http://localhost:3000}
 
 services:
   postgres:
