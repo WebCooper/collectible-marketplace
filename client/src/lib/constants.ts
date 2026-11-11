@@ -4,7 +4,7 @@ import type {
   MarketplaceStat,
   Testimonial,
 } from "@/types";
-import type { Category, ItemCondition, ListingSort } from "@/lib/api";
+import type { Category, ItemCondition, ListingSort, Role } from "@/lib/api";
 
 export const SITE_NAME = "LankaNumis";
 export const SITE_TAGLINE = "Sri Lanka's Premier Bourse for Rare Coins, Currency Notes & Philately";
@@ -211,3 +211,23 @@ export const TESTIMONIALS: Testimonial[] = [
     memberSince: "2020",
   },
 ];
+
+/** Signed-in navigation, by role. Mirrors the pages under app/(account). */
+export function accountLinks(role: Role): { name: string; href: string }[] {
+  const common = [{ name: "Notifications", href: "/notifications" }, { name: "My account", href: "/account" }];
+  switch (role) {
+    case "SELLER":
+      return [
+        { name: "My listings", href: "/seller/listings" },
+        { name: "Sell an item", href: "/seller/listings/new" },
+        { name: "Sales", href: "/sales" },
+        { name: "My orders", href: "/orders" },
+        { name: "My bids", href: "/bids" },
+        ...common,
+      ];
+    case "BUYER":
+      return [{ name: "My orders", href: "/orders" }, { name: "My bids", href: "/bids" }, ...common];
+    default:
+      return common;
+  }
+}
