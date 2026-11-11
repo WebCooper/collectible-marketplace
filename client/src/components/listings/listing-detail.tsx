@@ -12,6 +12,7 @@ import { Alert } from "@/components/ui/alert";
 import { ListingImage } from "./listing-image";
 import { AuctionPanel } from "./auction-panel";
 import { FixedPricePanel } from "./fixed-price-panel";
+import { ReportListing } from "./report-listing";
 
 const DECISION_LABELS = {
   APPROVED: "Approved",
@@ -120,7 +121,9 @@ export function ListingDetailView({ id }: { id: string }) {
             <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
               <span className="inline-flex items-center gap-1.5">
                 <User className="h-3.5 w-3.5" /> Sold by{" "}
-                <span className="font-medium text-ink">{listing.seller.name}</span>
+                <Link href={`/sellers/${listing.seller.id}`} className="font-medium text-ink underline-offset-2 hover:underline">
+                  {listing.seller.name}
+                </Link>
               </span>
               <span className="inline-flex items-center gap-1.5">
                 <Eye className="h-3.5 w-3.5" /> {listing.viewCount} views
@@ -148,6 +151,8 @@ export function ListingDetailView({ id }: { id: string }) {
           ) : (
             <FixedPricePanel listing={listing} />
           )}
+
+          <ReportListing listingId={listing.id} sellerId={listing.sellerId} />
         </div>
       </div>
 

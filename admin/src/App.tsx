@@ -468,24 +468,121 @@ function Overview({
     </State>
   );
 }
+const PASSWORD_RULE = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,72}$/;
+function StaffForm({ created }: { created: (name: string) => void }) {
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  async function submit(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    const form = e.currentTarget;
+    const f = new FormData(form);
+    const password = String(f.get("password"));
+    if (!PASSWORD_RULE.test(password)) {
+      setError(
+        "Password needs 8–72 characters with a lowercase letter, an uppercase letter and a digit.",
+      );
+      return;
+    }
+    setBusy(true);
+    setError("");
+    try {
+      const phone = String(f.get("phone") || "").trim();
+      const person = await api.createStaff({
+        name: String(f.get("name")).trim(),
+        email: String(f.get("email")).trim(),
+        phone: phone || undefined,
+        password,
+        role: String(f.get("role")) as "ADMIN" | "APPRAISER",
+      });
+      form.reset();
+      created(person.name);
+    } catch (err) {
+      setError(message(err));
+    } finally {
+      setBusy(false);
+    }
+  }
+  return (
+    <details className="panel">
+      <summary>
+        <b>Create a staff account</b>
+      </summary>
+      <form onSubmit={submit}>
+        <p className="subtle">
+          Appraisers and administrators cannot self-register. Share the
+          temporary password securely; they can change it from their profile.
+        </p>
+        {error && (
+          <p className="error" role="alert">
+            {error}
+          </p>
+        )}
+        <label>
+          Full name
+          <input name="name" required minLength={2} maxLength={100} />
+        </label>
+        <label>
+          E-mail
+          <input name="email" type="email" required />
+        </label>
+        <label>
+          Mobile (optional)
+          <input name="phone" placeholder="+94771234567" />
+        </label>
+        <label>
+          Role
+          <select name="role" defaultValue="APPRAISER">
+            <option value="APPRAISER">Appraiser</option>
+            <option value="ADMIN">Administrator</option>
+          </select>
+        </label>
+        <label>
+          Temporary password
+          <input
+            name="password"
+            type="password"
+            autoComplete="new-password"
+            required
+          />
+        </label>
+        <button className="primary" disabled={busy}>
+          {busy ? "Creating…" : "Create account"}
+        </button>
+      </form>
+    </details>
+  );
+}
 function UsersPage({
   decide,
   revision,
+  canCreateStaff,
+  onNotice,
 }: {
   decide: (d: Decision) => void;
   revision: number;
+  canCreateStaff: boolean;
+  onNotice: (m: string) => void;
 }) {
   const [page, setPage] = useState(1);
   const [q, setQ] = useState("");
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("");
+  const [added, setAdded] = useState(0);
   const loader = useCallback(
     () => api.users(page, search, status),
-    [page, search, status, revision],
+    [page, search, status, revision, added],
   );
   const state = useLoad(loader);
   return (
     <>
+      {canCreateStaff && (
+        <StaffForm
+          created={(name) => {
+            onNotice(`Staff account created for ${name}.`);
+            setAdded((n) => n + 1);
+          }}
+        />
+      )}
       <div className="toolbar">
         <form
           onSubmit={(e) => {
@@ -1226,7 +1323,12 @@ export default function App() {
                 go={go}
               />
             ) : current === "users" ? (
-              <UsersPage decide={setDecision} revision={revision} />
+              <UsersPage
+                decide={setDecision}
+                revision={revision}
+                canCreateStaff={user.role === "ADMIN"}
+                onNotice={setNotice}
+              />
             ) : current === "listings" || current === "verification" ? (
               <ListingsPage
                 verification={current === "verification"}

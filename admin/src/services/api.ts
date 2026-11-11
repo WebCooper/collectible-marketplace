@@ -157,6 +157,13 @@ export const api = {
   login: (email: string, password: string) =>
     request<{ user: Staff }>("/auth/login", "POST", { email, password }),
   logout: () => request("/auth/logout", "POST"),
+  createStaff: (body: {
+    name: string;
+    email: string;
+    phone?: string;
+    password: string;
+    role: "ADMIN" | "APPRAISER";
+  }) => request<Person>("/users/staff", "POST", body),
   analytics: () => request<Analytics>("/admin/analytics"),
   audit: () => request<Audit[]>("/admin/audit-log?limit=8"),
   users: (page: number, q: string, status: string) =>

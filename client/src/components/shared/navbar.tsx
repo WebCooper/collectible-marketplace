@@ -3,7 +3,8 @@
 import * as React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { NAV_LINKS, SITE_NAME } from "@/lib/constants";
+import { NAV_LINKS, SITE_NAME, accountLinks } from "@/lib/constants";
+import { NotificationBell } from "@/components/notifications/notification-bell";
 import { useAuth } from "@/providers/auth-provider";
 import { Button } from "@/components/ui/button";
 import { ShieldCheck, Search, Menu, X, Coins, User, ArrowRight, LogOut } from "lucide-react";
@@ -114,7 +115,8 @@ export function Navbar() {
           <div className="hidden sm:flex items-center gap-2 min-w-[160px] justify-end shrink-0">
             {status === "authenticated" && user ? (
               <>
-                <div className="flex items-center gap-2.5">
+                <NotificationBell />
+                <Link href="/account" className="flex items-center gap-2.5" aria-label="My account">
                   <div className="h-9 w-9 rounded-full bg-surface border border-line flex items-center justify-center text-ink">
                     <User className="h-4 w-4" />
                   </div>
@@ -122,7 +124,7 @@ export function Navbar() {
                     <span className="text-[13px] font-semibold text-ink max-w-[140px] truncate">{user.name}</span>
                     <span className="text-[11px] text-muted-foreground">{ROLE_LABELS[user.role]}</span>
                   </div>
-                </div>
+                </Link>
                 <Button
                   variant="ghost"
                   size="sm"
@@ -166,6 +168,25 @@ export function Navbar() {
         </div>
       </div>
 
+      {/* Signed-in workspace nav */}
+      {status === "authenticated" && user && (
+        <nav aria-label="My workspace" className="hidden sm:block border-t border-line bg-surface">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center gap-6 h-10 overflow-x-auto">
+            {accountLinks(user.role).map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                className={`whitespace-nowrap text-[13px] font-medium transition-colors ${
+                  link.href === "/seller/listings/new" ? "text-live hover:text-ink" : "text-ink-soft hover:text-ink"
+                }`}
+              >
+                {link.name}
+              </Link>
+            ))}
+          </div>
+        </nav>
+      )}
+
       {/* Section nav */}
       <nav className="hidden lg:block border-t border-line">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center gap-8 h-11">
@@ -207,6 +228,20 @@ export function Navbar() {
               </Link>
             ))}
           </div>
+          {status === "authenticated" && user && (
+            <div className="flex flex-col divide-y divide-line border-t border-line">
+              {accountLinks(user.role).map((link) => (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="py-3 text-[15px] font-medium text-ink hover:text-brass"
+                >
+                  {link.name}
+                </Link>
+              ))}
+            </div>
+          )}
           <div className="pt-3 border-t border-line flex flex-col gap-2.5">
             {status === "authenticated" && user ? (
               <>

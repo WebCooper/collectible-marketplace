@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import Link from "next/link";
 import { CheckCircle2, CreditCard, Truck } from "lucide-react";
 import { errorMessage, ordersApi, type CheckoutResponse } from "@/lib/api";
 import { checkoutSchema, type CheckoutFormInput } from "@/lib/validations/checkout-schema";
@@ -120,6 +121,9 @@ export function CheckoutPanel({
         <p className="text-xs text-muted-foreground">
           The item is reserved for you. The order moves to PAID once the payment provider confirms.
         </p>
+        <Link href={`/orders/${result.order.id}`} className="block text-sm font-medium underline underline-offset-2">
+          Track this order →
+        </Link>
         {isManual && process.env.NODE_ENV !== "production" && (
           <div className="space-y-2 border-t border-line pt-3">
             <p className="text-xs text-muted-foreground">
